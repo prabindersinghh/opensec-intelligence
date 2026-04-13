@@ -10,7 +10,6 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "postbuild": "node -e \"require('fs').copyFileSync('package.json','dist/package.json')\"",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
