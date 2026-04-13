@@ -29,7 +29,7 @@ interface DaemonPidFile {
   startedAt: string
 }
 
-const PID_DIR = join(homedir(), '.cmdr', 'daemon')
+const PID_DIR = join(homedir(), '.opensec', 'daemon')
 
 function pidFilePath(cwd: string): string {
   // Use a hash of cwd for unique pid file

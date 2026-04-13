@@ -297,7 +297,7 @@ export async function startServer(options: ServeOptions): Promise<void> {
       sendError(res, 404, `Not found: ${url}`)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
-      console.error(`[cmdr serve] Error:`, msg)
+      console.error(`[opensec serve] Error:`, msg)
       if (!res.headersSent) {
         sendError(res, 500, msg)
       }
@@ -305,7 +305,7 @@ export async function startServer(options: ServeOptions): Promise<void> {
   })
 
   server.listen(options.port, options.host, () => {
-    console.log(`cmdr serve running on http://${options.host}:${options.port}`)
+    console.log(`opensec serve running on http://${options.host}:${options.port}`)
     console.log(`  Model:    ${options.model}`)
     console.log(`  Provider: ${provider}`)
     console.log(`  Endpoints:`)
@@ -317,7 +317,7 @@ export async function startServer(options: ServeOptions): Promise<void> {
 
   // Graceful shutdown
   const shutdown = () => {
-    console.log('\nShutting down cmdr serve...')
+    console.log('\nShutting down opensec serve...')
     server.close()
     process.exit(0)
   }

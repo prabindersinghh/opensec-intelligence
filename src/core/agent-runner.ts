@@ -399,7 +399,7 @@ export class AgentRunner {
         // execute write/dangerous tools sequentially.
         const toolContext: ToolUseContext = {
           agent: {
-            name: this.options.agentName ?? 'cmdr',
+            name: this.options.agentName ?? 'opensec',
             role: this.options.agentRole ?? 'assistant',
             model: this.options.model,
           },

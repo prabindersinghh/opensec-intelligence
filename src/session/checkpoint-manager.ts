@@ -11,7 +11,7 @@ import { join } from 'path'
 import { homedir } from 'os'
 import type { LLMMessage } from '../core/types.js'
 
-const CMDR_DIR = join(homedir(), '.cmdr')
+const CMDR_DIR = join(homedir(), '.opensec')
 const SESSIONS_DIR = join(CMDR_DIR, 'sessions')
 
 export interface Checkpoint {

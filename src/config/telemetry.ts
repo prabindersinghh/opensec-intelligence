@@ -25,7 +25,7 @@ export interface TelemetryEvent {
 export class Telemetry {
   private enabled = false
   private readonly sessionId = randomUUID()
-  private readonly dir = join(homedir(), '.cmdr', 'telemetry')
+  private readonly dir = join(homedir(), '.opensec', 'telemetry')
 
   /** Enable or disable telemetry. */
   setEnabled(enabled: boolean): void {

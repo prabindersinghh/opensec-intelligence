@@ -170,57 +170,27 @@ export function parseArgs(argv: string[]): CliArgs {
 export function printHelp(): void {
   console.log(`
   OpenSec Intelligence — local-first AI security engine
-  Built on cmdr by Reyyan Ahmed
 
-  Usage:
-    opensec scan [path]            Run full security scan (default: ./)
-    opensec scan [path] --quick    Scanner agent only (fast sweep, <2 min)
-    opensec scan [path] --cloud    Cloud model for analyst/consensus
-    opensec fix                    Run fixer agent on last scan results
-    opensec report                 Output HTML report of last findings
-    opensec [options] [prompt]     Interactive REPL
-    opensec serve [options]        Start HTTP/SSE server
+  SCAN COMMANDS
+    opensec scan [path]          Full 4-agent security scan (default: ./)
+    opensec scan [path] --quick  Scanner only, fast sweep
+    opensec scan [path] --cloud  Cloud models for analyst + consensus
 
-  Security options:
-    --quick                  Scanner agent only (no analyst/consensus/fixer)
-    --cloud                  Use cloud provider for analyst and consensus agents
+  FIX & REPORT
+    opensec fix                  Apply fixes from last scan
+    opensec report               Generate HTML security report
 
-  Options:
-    -m, --model <name>       Set the Ollama model (auto-detects if omitted)
-    -u, --ollama-url <url>   Ollama server URL (default: http://localhost:11434)
-    --provider <name>        LLM provider: ollama (default), openai, anthropic
-    -p, --prompt <text>      Run a single prompt and exit
-    -r, --resume <id>        Resume a previous session
-    -c, --continue           Resume most recent session for this directory
-    -t, --team <preset>      Run in team mode (review, fullstack, security)
-    --cwd <path>             Set working directory
-    --verbose                Print full tool output (default: collapsed)
-    --max-turns <n>          Maximum agent turns before stopping
-    --output-format <fmt>    Output format: text (default), json, stream-json
-    -e, --effort <level>     Effort level: low, medium (default), high, max
-    --fast                   Alias for --effort low
-    -i, --image <path>       Attach an image to the prompt (vision models)
-    --no-buddy               Disable buddy companion on startup
-    --browser                Enable browser automation tools (requires playwright-core)
-    -h, --help               Show this help
-    -v, --version            Show version
-    --dangerously-skip-permissions  Auto-approve all tool calls (yolo mode)
+  GENERAL
+    opensec -m <model>           Set Ollama model
+    opensec serve                Start HTTP API server
+    opensec --help               Show this help
+    opensec --version            Show version
 
-  Serve options:
-    --port <n>               HTTP server port (default: 4141)
-    --host <addr>            HTTP server host (default: 127.0.0.1)
+  RECOMMENDED MODELS
+    qwen2.5-coder:14b            Best for security analysis
+    deepseek-r1:14b              Best for consensus reasoning
+    llama3.2:3b                  Fast scanner (low resource)
 
-  Daemon options:
-    --watch <path>           Directory to watch (repeatable)
-    --on-change <cmd>        Command to run on file change
-
-  Examples:
-    opensec scan ./             Full 4-agent security scan of current dir
-    opensec scan ./src --quick  Fast scanner sweep only
-    opensec scan ./ --cloud     Cloud-powered analyst + consensus
-    opensec fix                 Apply fixes from last scan
-    opensec report              Generate HTML findings report
-    opensec -m qwen2.5-coder:14b  Interactive REPL with specific model
-    opensec serve --port 8080   Start HTTP/SSE server
+  Built on cmdr by Reyyan Ahmed — MIT License
 `)
 }

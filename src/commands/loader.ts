@@ -31,10 +31,10 @@ export interface CustomCommand {
 // Paths
 // ---------------------------------------------------------------------------
 
-const USER_COMMANDS_DIR = join(homedir(), '.cmdr', 'commands')
+const USER_COMMANDS_DIR = join(homedir(), '.opensec', 'commands')
 
 function projectCommandsDir(projectRoot: string): string {
-  return join(projectRoot, '.cmdr', 'commands')
+  return join(projectRoot, '.opensec', 'commands')
 }
 
 // ---------------------------------------------------------------------------

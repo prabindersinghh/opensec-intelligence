@@ -28,9 +28,9 @@
   "engines": {
     "node": ">=20.0.0"
   },
-  "homepage": "https://github.com/reyyanxahmed/cmdr#readme",
+  "homepage": "https://github.com/prabindersinghh/opensec-intelligence#readme",
   "bugs": {
-    "url": "https://github.com/reyyanxahmed/cmdr/issues"
+    "url": "https://github.com/prabindersinghh/opensec-intelligence/issues"
   },
   "dependencies": {
     "chalk": "^5.3.0",
@@ -69,6 +69,6 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/reyyanxahmed/cmdr"
+    "url": "https://github.com/prabindersinghh/opensec-intelligence.git"
   }
 }

@@ -185,8 +185,8 @@ export class AgentRegistry {
     // Load in priority order: bundled first, then user, then project
     // Later sources override earlier ones (project > user > bundled)
     const bundledDir = join(__dirname, 'bundled')
-    const userDir = join(homedir(), '.cmdr', 'agents')
-    const projectDir = join(projectRoot, '.cmdr', 'agents')
+    const userDir = join(homedir(), '.opensec', 'agents')
+    const projectDir = join(projectRoot, '.opensec', 'agents')
 
     const bundled = await loadAgentsFromDir(bundledDir, 'bundled')
     const user = await loadAgentsFromDir(userDir, 'user')

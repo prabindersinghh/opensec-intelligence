@@ -56,7 +56,7 @@ registerCommand({
   execute: async () => {
     const lines = [
       '',
-      `  ${PURPLE.bold('cmdr')} ${DIM('— available commands')}`,
+      `  ${PURPLE.bold('opensec')} ${DIM('— available commands')}`,
       '',
     ]
 
@@ -190,11 +190,11 @@ registerCommand({
 
 registerCommand({
   name: 'init',
-  description: 'Create CMDR.md and .cmdr/ in current project',
+  description: 'Create OPENSEC.md and .opensec/ in current project',
   execute: async (_args, context) => {
     const root = context.session.projectContext.rootDir
-    const cmdrMdPath = join(root, 'CMDR.md')
-    const cmdrDir = join(root, '.cmdr')
+    const cmdrMdPath = join(root, 'OPENSEC.md')
+    const cmdrDir = join(root, '.opensec')
 
     let created: string[] = []
 
@@ -203,16 +203,16 @@ registerCommand({
       await stat(cmdrDir)
     } catch {
       await mkdir(cmdrDir, { recursive: true })
-      created.push('.cmdr/')
+      created.push('.opensec/')
     }
 
     // Create CMDR.md template
     try {
       await stat(cmdrMdPath)
     } catch {
-      const template = `# CMDR Instructions
+      const template = `# OpenSec Intelligence Instructions
 
-<!-- cmdr reads this file on every session start. Add project-specific rules here. -->
+<!-- OpenSec Intelligence reads this file on every session start. Add project-specific rules here. -->
 
 ## Project Overview
 <!-- Describe what this project does -->
@@ -227,11 +227,11 @@ registerCommand({
 <!-- e.g., "Never modify files in /core without asking first", "Always run linting before committing" -->
 `
       await writeFile(cmdrMdPath, template, 'utf-8')
-      created.push('CMDR.md')
+      created.push('OPENSEC.md')
     }
 
     if (created.length === 0) {
-      return renderInfo('CMDR.md and .cmdr/ already exist.')
+      return renderInfo('OPENSEC.md and .opensec/ already exist.')
     }
     return renderInfo(`Created: ${created.join(', ')}`)
   },
@@ -275,7 +275,7 @@ registerCommand({
       lines.push(`  ${GREEN('•')} ${DIM(s.id.slice(0, 20))}  ${WHITE(dir)}  ${DIM(s.model)}  ${DIM(timeStr)}  ${DIM(`${s.messageCount} msgs`)}`)
     }
     lines.push('')
-    lines.push(`  ${DIM('Resume with: cmdr --resume <session-id>')}`)
+    lines.push(`  ${DIM('Resume with: opensec --resume <session-id>')}`)
     lines.push('')
     return lines.join('\n')
   },
@@ -378,7 +378,7 @@ registerCommand({
         '',
         ...presets.map(p => `  ${GREEN('•')} ${WHITE(p)}`),
         '',
-        `  ${DIM('Usage: /team <preset>  or  cmdr --team <preset>')}`,
+        `  ${DIM('Usage: /team <preset>  or  opensec --team <preset>')}`,
         '',
       ]
       return lines.join('\n')
@@ -419,15 +419,15 @@ registerCommand({
         `  ${DIM('Ollama:')}    ${WHITE(context.ollamaUrl)}`,
         '',
         `  ${DIM('Config files:')}`,
-        `  ${DIM('  User:')}    ~/.cmdr/config.toml`,
-        `  ${DIM('  Project:')} .cmdr.toml`,
+        `  ${DIM('  User:')}    ~/.opensec/config.toml`,
+        `  ${DIM('  Project:')} .opensec.toml`,
         '',
-        `  ${DIM('Env vars: CMDR_MODEL, CMDR_OLLAMA_URL, CMDR_PROVIDER')}`,
+        `  ${DIM('Env vars: OPENSEC_MODEL, OPENSEC_OLLAMA_URL, OPENSEC_PROVIDER')}`,
         '',
       ]
       return lines.join('\n')
     }
-    return renderInfo(`Config editing not yet supported. Edit ~/.cmdr/config.toml directly.`)
+    return renderInfo(`Config editing not yet supported. Edit ~/.opensec/config.toml directly.`)
   },
 })
 
@@ -559,7 +559,7 @@ registerCommand({
     if (!sub || sub === 'show') {
       const instructions = context.session.projectContext.cmdrInstructions
       if (!instructions) {
-        return renderInfo('No CMDR.md context loaded.')
+        return renderInfo('No OPENSEC.md context loaded.')
       }
       const lineCount = instructions.split('\n').length
       const lines = [
@@ -581,7 +581,7 @@ registerCommand({
 
 registerCommand({
   name: 'quit',
-  description: 'Exit cmdr',
+  description: 'Exit opensec',
   execute: async () => {
     return '__QUIT__'
   },
@@ -589,7 +589,7 @@ registerCommand({
 
 registerCommand({
   name: 'exit',
-  description: 'Exit cmdr',
+  description: 'Exit opensec',
   execute: async () => {
     return '__QUIT__'
   },

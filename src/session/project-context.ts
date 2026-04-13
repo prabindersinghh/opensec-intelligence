@@ -75,35 +75,35 @@ export async function discoverProject(rootDir: string): Promise<ProjectContext> 
     }
   }
 
-  // CMDR.md — hierarchical context files
-  // Priority: global (~/.cmdr/CMDR.md) < project root < subdirectories (deeper = higher)
+  // OPENSEC.md — hierarchical context files
+  // Priority: global (~/.opensec/OPENSEC.md) < project root < subdirectories (deeper = higher)
   const instructionParts: string[] = []
 
-  // 1. Global user-level CMDR.md
+  // 1. Global user-level OPENSEC.md
   try {
-    const globalMd = await readFile(join(homedir(), '.cmdr', 'CMDR.md'), 'utf-8')
-    if (globalMd.trim()) instructionParts.push(`<!-- ~/.cmdr/CMDR.md -->\n${globalMd.trim()}`)
-  } catch { /* no global CMDR.md */ }
+    const globalMd = await readFile(join(homedir(), '.opensec', 'OPENSEC.md'), 'utf-8')
+    if (globalMd.trim()) instructionParts.push(`<!-- ~/.opensec/OPENSEC.md -->\n${globalMd.trim()}`)
+  } catch { /* no global OPENSEC.md */ }
 
-  // 2. Project root CMDR.md and .cmdr/instructions.md
+  // 2. Project root OPENSEC.md and .opensec/instructions.md
   try {
-    const cmdrMd = await readFile(join(rootDir, 'CMDR.md'), 'utf-8')
-    if (cmdrMd.trim()) instructionParts.push(`<!-- CMDR.md -->\n${cmdrMd.trim()}`)
-  } catch { /* no CMDR.md */ }
+    const cmdrMd = await readFile(join(rootDir, 'OPENSEC.md'), 'utf-8')
+    if (cmdrMd.trim()) instructionParts.push(`<!-- OPENSEC.md -->\n${cmdrMd.trim()}`)
+  } catch { /* no OPENSEC.md */ }
   try {
-    const dotCmdrMd = await readFile(join(rootDir, '.cmdr', 'instructions.md'), 'utf-8')
+    const dotCmdrMd = await readFile(join(rootDir, '.opensec', 'instructions.md'), 'utf-8')
     if (dotCmdrMd.trim()) instructionParts.push(dotCmdrMd.trim())
-  } catch { /* no .cmdr/instructions.md */ }
+  } catch { /* no .opensec/instructions.md */ }
 
-  // 3. Scan top-level subdirectories for scoped CMDR.md files
+  // 3. Scan top-level subdirectories for scoped OPENSEC.md files
   try {
     const entries = await readdir(rootDir, { withFileTypes: true })
     for (const entry of entries) {
       if (!entry.isDirectory() || entry.name.startsWith('.') || entry.name === 'node_modules') continue
       try {
-        const subMd = await readFile(join(rootDir, entry.name, 'CMDR.md'), 'utf-8')
-        if (subMd.trim()) instructionParts.push(`<!-- ${entry.name}/CMDR.md -->\n${subMd.trim()}`)
-      } catch { /* no sub CMDR.md */ }
+        const subMd = await readFile(join(rootDir, entry.name, 'OPENSEC.md'), 'utf-8')
+        if (subMd.trim()) instructionParts.push(`<!-- ${entry.name}/OPENSEC.md -->\n${subMd.trim()}`)
+      } catch { /* no sub OPENSEC.md */ }
     }
   } catch { /* ignore readdir errors */ }
 

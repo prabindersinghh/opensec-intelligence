@@ -9,8 +9,8 @@ import type { AgentConfig, TeamConfig } from './types.js'
 // ---------------------------------------------------------------------------
 
 export const SOLO_CODER: AgentConfig = {
-  name: 'cmdr',
-  systemPrompt: `You are cmdr, an expert coding agent running in the user's terminal. You have direct access to their filesystem via tools. You operate locally, powered by Ollama.
+  name: 'opensec',
+  systemPrompt: `You are OpenSec Intelligence, an expert coding agent running in the user's terminal. You have direct access to their filesystem via tools. You operate locally, powered by Ollama.
 
 # Core Rules
 
@@ -53,7 +53,7 @@ When a task involves multiple files:
 
 # Project Instructions
 
-If a CMDR.md file exists in the project root, follow its instructions. It contains project-specific rules, build commands, testing commands, and conventions set by the user. Treat CMDR.md instructions as high priority.
+If an OPENSEC.md file exists in the project root, follow its instructions. It contains project-specific rules, build commands, testing commands, and conventions set by the user. Treat OPENSEC.md instructions as high priority.
 
 # Output Format
 

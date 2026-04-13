@@ -293,7 +293,7 @@ export function renderWelcome(model: string, projectInfo: string, version = '0.0
   metadataRow('Agents', String(agentCount), WHITE)
   metadataRow('Plugins', String(pluginCount), WHITE)
   metadataRow('MCP', String(mcpServerCount), WHITE)
-  metadataRow('Workspace', `${customCmdCount} ${customCmdCount === 1 ? 'command' : 'commands'} · ${cmdrMdLines} CMDR.md lines`, DIM)
+  metadataRow('Workspace', `${customCmdCount} ${customCmdCount === 1 ? 'command' : 'commands'} · ${cmdrMdLines} OPENSEC.md lines`, DIM)
   lines.push('')
 
   const tipsInnerWidth = Math.max(18, Math.min(94, terminalWidth - 6))

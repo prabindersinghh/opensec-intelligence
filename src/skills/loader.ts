@@ -26,10 +26,10 @@ export interface Skill {
 // ---------------------------------------------------------------------------
 
 const BUNDLED_SKILLS_DIR = join(import.meta.dirname ?? '.', '..', '..', 'skills')
-const USER_SKILLS_DIR = join(homedir(), '.cmdr', 'skills')
+const USER_SKILLS_DIR = join(homedir(), '.opensec', 'skills')
 
 function projectSkillsDir(projectRoot: string): string {
-  return join(projectRoot, '.cmdr', 'skills')
+  return join(projectRoot, '.opensec', 'skills')
 }
 
 // ---------------------------------------------------------------------------

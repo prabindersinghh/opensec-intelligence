@@ -31,12 +31,12 @@ export class MemoryManager {
 
   /** Path to the project-level memory file. */
   get projectMemoryPath(): string {
-    return join(this.projectDir, '.cmdr', 'MEMORY.md')
+    return join(this.projectDir, '.opensec', 'MEMORY.md')
   }
 
   /** Path to the user-level memory file. */
   get userMemoryPath(): string {
-    return join(homedir(), '.cmdr', 'MEMORY.md')
+    return join(homedir(), '.opensec', 'MEMORY.md')
   }
 
   /** Read a memory file, returning empty string if not found. */

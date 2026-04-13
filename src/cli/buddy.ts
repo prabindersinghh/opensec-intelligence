@@ -102,7 +102,7 @@ export class BuddyManager {
   private state: BuddyState | null = null
 
   constructor() {
-    this.statePath = join(homedir(), '.cmdr', 'buddy.json')
+    this.statePath = join(homedir(), '.opensec', 'buddy.json')
   }
 
   /** Load or initialize buddy state. */
@@ -136,7 +136,7 @@ export class BuddyManager {
   /** Save state to disk. */
   private async save(): Promise<void> {
     if (!this.state) return
-    const dir = join(homedir(), '.cmdr')
+    const dir = join(homedir(), '.opensec')
     await mkdir(dir, { recursive: true })
     await writeFile(this.statePath, JSON.stringify(this.state, null, 2))
   }

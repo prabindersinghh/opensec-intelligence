@@ -163,7 +163,7 @@ export class IndexManager {
     private ollamaUrl: string = 'http://localhost:11434',
     private embedModel: string = 'nomic-embed-text',
   ) {
-    const indexDir = join(homedir(), '.cmdr', 'index')
+    const indexDir = join(homedir(), '.opensec', 'index')
     // Use cwd hash for unique index per project
     const { createHash } = require('node:crypto') as typeof import('node:crypto')
     const hash = createHash('sha256').update(cwd).digest('hex').slice(0, 12)
@@ -193,7 +193,7 @@ export class IndexManager {
   private async save(): Promise<void> {
     if (!this.state) return
     this.state.updatedAt = new Date().toISOString()
-    const dir = join(homedir(), '.cmdr', 'index')
+    const dir = join(homedir(), '.opensec', 'index')
     await mkdir(dir, { recursive: true })
     await writeFile(this.indexPath, JSON.stringify(this.state))
   }

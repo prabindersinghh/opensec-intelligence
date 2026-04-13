@@ -7,7 +7,7 @@
 
 import { YELLOW, GREEN, DIM } from './theme.js'
 
-const PACKAGE_NAME = 'cmdr-agent'
+const PACKAGE_NAME = 'opensec-intelligence'
 
 /**
  * Fetch the latest published version from the npm registry.

@@ -14,7 +14,7 @@ import { readFile, writeFile, mkdir } from 'fs/promises'
 import { join, resolve, relative, isAbsolute } from 'path'
 import { homedir } from 'os'
 
-const SETTINGS_PATH = join(homedir(), '.cmdr', 'settings.json')
+const SETTINGS_PATH = join(homedir(), '.opensec', 'settings.json')
 
 interface PathRule {
   /** Glob pattern relative to project root. */
@@ -189,7 +189,7 @@ export class PermissionManager {
   /** Save current persisted allow-list to disk. */
   private async saveSettings(): Promise<void> {
     try {
-      await mkdir(join(homedir(), '.cmdr'), { recursive: true })
+      await mkdir(join(homedir(), '.opensec'), { recursive: true })
       const settings: PersistedSettings = {
         allowedTools: [...this.persistedAllowed],
         permissionMode: this.mode,

@@ -149,7 +149,7 @@ export class McpClient {
       sendRpc('initialize', {
         protocolVersion: '2024-11-05',
         capabilities: {},
-        clientInfo: { name: 'cmdr', version: '2.2.0' },
+        clientInfo: { name: 'opensec', version: '3.0.0' },
       }).then(() => {
         // Step 2: Send initialized notification (no response expected)
         child.stdin!.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\n')
