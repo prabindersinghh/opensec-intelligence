@@ -1,0 +1,8 @@
+{
+  "prompt": "Create arg-parser.js that exports a 'parseArgs' function. It takes an argv array (like process.argv.slice(2)) and returns an object with: flags (--flag becomes {flag: true}), options (--key value becomes {key: 'value'}), and positional args. Support both --long and -s short flags.",
+  "tier": "hard",
+  "category": "code_gen",
+  "description": "Create a CLI argument parser",
+  "timeout": 60,
+  "tags": ["cli", "parsing", "arguments"]
+}

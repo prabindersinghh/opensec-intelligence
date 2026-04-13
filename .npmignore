@@ -1,0 +1,25 @@
+src/
+bin/
+evals/
+eval/
+tests/
+*.ts
+tsconfig.json
+vitest.config.ts
+.github/
+.gitignore
+CONTRIBUTING.md
+CMDR.md
+.cmdr/
+cmdr_master.md
+phase completion.md
+evals.txt
+test_tty.py
+claude-code-main/
+claw-code-main/
+open-multi-agent-main/
+gemini-cli-main/
+.DS_Store
+.env
+.env.*
+*.tsbuildinfo

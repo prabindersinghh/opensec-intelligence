@@ -1,0 +1,8 @@
+{
+  "prompt": "Fix the memory leak in cache.js. The cache grows unbounded. Add a maxSize parameter to the constructor and evict the oldest entry when the cache is full (LRU eviction).",
+  "tier": "hard",
+  "category": "debugging",
+  "description": "Fix an unbounded cache by adding LRU eviction",
+  "timeout": 60,
+  "tags": ["memory-leak", "caching", "lru", "debugging"]
+}

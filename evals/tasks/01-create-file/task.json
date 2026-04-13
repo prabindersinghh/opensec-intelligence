@@ -1,0 +1,6 @@
+{
+  "prompt": "Create a file called hello.txt with the content 'Hello, cmdr!'",
+  "tier": "trivial",
+  "description": "Create a simple text file",
+  "timeout": 30000
+}

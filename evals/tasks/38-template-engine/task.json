@@ -1,0 +1,8 @@
+{
+  "prompt": "Create template.js that exports a function 'render(template, data)'. It should replace {{variable}} placeholders with values from data, support {{#if condition}}...{{/if}} blocks, and {{#each array}}...{{/each}} loops where {{this}} refers to current item. Return the rendered string.",
+  "tier": "hard",
+  "category": "code_gen",
+  "description": "Build a template engine supporting variable substitution, conditionals, and loops",
+  "timeout": 90000,
+  "tags": ["template-engine", "parsing", "string-processing"]
+}

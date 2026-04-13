@@ -1,0 +1,8 @@
+{
+  "prompt": "Create stream-processor.js that exports a function 'processLines(inputPath, outputPath, transform)'. It should read the input file line by line using Node.js streams, apply the transform function to each line, and write the results to the output file. It must handle large files without loading them fully into memory. Return a promise that resolves with the number of lines processed.",
+  "tier": "hard",
+  "category": "code_gen",
+  "description": "Build a streaming line processor using Node.js streams for memory-efficient file transformation",
+  "timeout": 60000,
+  "tags": ["streams", "file-io", "nodejs", "async"]
+}

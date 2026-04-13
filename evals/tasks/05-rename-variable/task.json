@@ -1,0 +1,6 @@
+{
+  "prompt": "Rename the variable 'x' to 'count' everywhere in counter.js",
+  "tier": "easy",
+  "description": "Rename a variable across a file",
+  "timeout": 45000
+}

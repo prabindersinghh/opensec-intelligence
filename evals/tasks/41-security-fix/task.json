@@ -1,0 +1,8 @@
+{
+  "prompt": "Fix the security vulnerabilities in webapp.js. There are at least 3 issues: SQL injection, XSS, and path traversal. Fix all of them while keeping the functionality intact.",
+  "tier": "hard",
+  "category": "security",
+  "description": "Fix SQL injection, XSS, and path traversal vulnerabilities",
+  "timeout": 90000,
+  "tags": ["security", "xss", "sql-injection", "path-traversal"]
+}

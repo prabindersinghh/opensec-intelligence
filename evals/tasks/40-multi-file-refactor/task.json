@@ -1,0 +1,8 @@
+{
+  "prompt": "The project has all code in a single index.js file. Refactor it into separate modules: math.js (math functions), string.js (string functions), array.js (array functions). Update index.js to import and re-export from all three modules. All existing functionality must be preserved.",
+  "tier": "hard",
+  "category": "multi_file",
+  "description": "Refactor a monolithic file into separate domain modules while preserving all exports",
+  "timeout": 120000,
+  "tags": ["refactoring", "modules", "multi-file", "code-organization"]
+}

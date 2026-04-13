@@ -1,0 +1,8 @@
+{
+  "prompt": "Read the file 'config.json' and add a new key 'version' with value '2.0.0', then write it back.",
+  "tier": "easy",
+  "category": "file_ops",
+  "description": "Read a JSON file, add a key, and write it back",
+  "timeout": 30,
+  "tags": ["json", "file-io", "read-write"]
+}

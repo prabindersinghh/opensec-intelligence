@@ -1,0 +1,8 @@
+{
+  "prompt": "Create diff.js that exports a 'diff(oldText, newText)' function. It should return an array of change objects: { type: 'add'|'remove'|'equal', value: string } representing the line-by-line diff between two multiline strings. Also export 'formatDiff(changes)' that returns a unified diff string with +/- prefixes for added/removed lines and a space prefix for equal lines.",
+  "tier": "hard",
+  "category": "code_gen",
+  "description": "Implement a line-by-line diff algorithm with unified format output",
+  "timeout": 90000,
+  "tags": ["algorithm", "diff", "string-processing"]
+}

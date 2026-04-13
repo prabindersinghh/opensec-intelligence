@@ -1,0 +1,8 @@
+{
+  "prompt": "Create event-emitter.js with an EventEmitter class. It should support on(event, callback), off(event, callback), and emit(event, ...args). Export it.",
+  "tier": "medium",
+  "category": "code_gen",
+  "description": "Implement a basic event emitter pattern",
+  "timeout": 60,
+  "tags": ["events", "design-patterns", "classes"]
+}

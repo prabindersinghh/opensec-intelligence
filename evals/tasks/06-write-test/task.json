@@ -1,0 +1,6 @@
+{
+  "prompt": "Write a test file called math.test.js that tests the add and subtract functions in math.js using console.assert",
+  "tier": "easy",
+  "description": "Write basic tests for existing functions",
+  "timeout": 45000
+}

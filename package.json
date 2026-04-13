@@ -1,0 +1,75 @@
+{
+  "name": "opensec-intelligence",
+  "version": "3.0.0",
+  "description": "Local-first, model-agnostic AI security engine. Free forever with Ollama.",
+  "type": "module",
+  "bin": {
+    "cmdr": "./dist/bin/cmdr.js",
+    "opensec": "./dist/bin/cmdr.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "postbuild": "cp package.json dist/package.json && chmod +x dist/bin/cmdr.js",
+    "dev": "tsc --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "tsc --noEmit",
+    "start": "node dist/bin/cmdr.js",
+    "eval": "npx tsx evals/run-evals.ts",
+    "eval:report": "npx tsx evals/report.ts",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist",
+    "LICENSE",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "homepage": "https://github.com/reyyanxahmed/cmdr#readme",
+  "bugs": {
+    "url": "https://github.com/reyyanxahmed/cmdr/issues"
+  },
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "highlight.js": "^11.11.1",
+    "ink": "npm:@jrichman/ink@6.6.7",
+    "ink-spinner": "^5.0.0",
+    "ink-text-input": "^6.0.0",
+    "lowlight": "^3.3.0",
+    "marked": "^14.0.0",
+    "marked-terminal": "^7.2.0",
+    "ora": "^8.0.0",
+    "react": "^19.2.0",
+    "smol-toml": "^1.6.1",
+    "string-width": "^8.1.0",
+    "strip-ansi": "^7.1.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.2.2",
+    "tsx": "^4.21.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "coding",
+    "ollama",
+    "multi-agent",
+    "terminal",
+    "cli",
+    "local-llm"
+  ],
+  "author": "Reyyan Ahmed",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reyyanxahmed/cmdr"
+  }
+}

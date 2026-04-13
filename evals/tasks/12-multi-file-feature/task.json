@@ -1,0 +1,6 @@
+{
+  "prompt": "Add a 'logger' module (logger.js) that exports a log function. Then modify both app.js and worker.js to use the logger instead of console.log.",
+  "tier": "hard",
+  "description": "Create a new module and integrate it into multiple files",
+  "timeout": 90000
+}

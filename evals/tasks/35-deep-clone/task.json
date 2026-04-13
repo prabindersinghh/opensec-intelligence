@@ -1,0 +1,8 @@
+{
+  "prompt": "Create deep-clone.js that exports a 'deepClone' function. It should handle objects, arrays, dates, regular expressions, Maps, Sets, and nested structures. It must not use JSON.parse/JSON.stringify (that loses Date/RegExp/Map/Set). Do not use structuredClone.",
+  "tier": "medium",
+  "category": "code_gen",
+  "description": "Implement a deep clone function that handles complex types without JSON serialization or structuredClone",
+  "timeout": 60000,
+  "tags": ["deep-copy", "data-structures", "utility"]
+}

@@ -1,0 +1,6 @@
+{
+  "prompt": "Create a Node.js script called parse.js that reads data.csv and writes the parsed data to data.json as an array of objects with the CSV headers as keys",
+  "tier": "medium",
+  "description": "Parse CSV to JSON",
+  "timeout": 60000
+}

@@ -1,0 +1,8 @@
+{
+  "prompt": "Create middleware.js with three Express-style middleware functions: 'logger' (logs method and url to console), 'cors' (sets Access-Control-Allow-Origin to *), and 'jsonParser' (parses JSON body). Each takes (req, res, next). Export all three.",
+  "tier": "hard",
+  "category": "code_gen",
+  "description": "Create Express-style middleware functions",
+  "timeout": 60,
+  "tags": ["express", "middleware", "http"]
+}

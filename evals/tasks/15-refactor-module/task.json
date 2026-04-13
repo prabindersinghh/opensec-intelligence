@@ -1,0 +1,6 @@
+{
+  "prompt": "Refactor monolith.js into three separate modules: db.js (database functions), auth.js (authentication functions), and api.js (API handlers). Each should export its functions. Update monolith.js to re-export everything from the new modules.",
+  "tier": "hard",
+  "description": "Split a monolith file into separate modules",
+  "timeout": 120000
+}

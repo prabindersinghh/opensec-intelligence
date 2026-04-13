@@ -1,0 +1,8 @@
+{
+  "prompt": "Fix the bug in range.js. The function 'range(start, end)' should return an array from start up to and including end.",
+  "tier": "medium",
+  "category": "debugging",
+  "description": "Fix an off-by-one error in a range function",
+  "timeout": 30,
+  "tags": ["debugging", "off-by-one", "loops"]
+}

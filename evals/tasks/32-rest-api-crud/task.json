@@ -1,0 +1,8 @@
+{
+  "prompt": "Create a simple in-memory REST API with three files: store.js (in-memory data store with CRUD operations), routes.js (route handlers for GET/POST/PUT/DELETE /items), and server.js (creates HTTP server using routes). Items have id, name, and price fields.",
+  "tier": "hard",
+  "category": "multi_file",
+  "description": "Build a multi-file in-memory REST API with store, routes, and server modules",
+  "timeout": 90000,
+  "tags": ["api", "http", "crud", "multi-file"]
+}

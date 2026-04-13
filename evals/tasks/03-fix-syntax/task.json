@@ -1,0 +1,6 @@
+{
+  "prompt": "Fix the syntax error in app.js",
+  "tier": "trivial",
+  "description": "Fix a missing closing parenthesis",
+  "timeout": 30000
+}

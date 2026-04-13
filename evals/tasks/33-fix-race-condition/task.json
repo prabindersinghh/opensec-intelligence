@@ -1,0 +1,8 @@
+{
+  "prompt": "Fix the race condition in counter.js. The 'incrementAll' function processes items in parallel but the counter ends up wrong. Make it thread-safe by using proper async patterns.",
+  "tier": "hard",
+  "category": "debugging",
+  "description": "Fix a race condition in async counter code where parallel increments produce incorrect results",
+  "timeout": 60000,
+  "tags": ["async", "concurrency", "debugging", "race-condition"]
+}

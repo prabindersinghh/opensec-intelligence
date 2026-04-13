@@ -1,0 +1,8 @@
+{
+  "prompt": "Refactor callbacks.js to use async/await instead of callback-style functions. Keep the same exported function names and behavior.",
+  "tier": "hard",
+  "category": "refactoring",
+  "description": "Refactor callback-based code to async/await",
+  "timeout": 60,
+  "tags": ["refactoring", "async-await", "callbacks"]
+}

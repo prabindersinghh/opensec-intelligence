@@ -1,0 +1,8 @@
+{
+  "prompt": "Create bst.js with a BinarySearchTree class. It should support insert(value), search(value) returning boolean, inOrder() returning sorted array, min() and max(). Export the class.",
+  "tier": "hard",
+  "category": "code_gen",
+  "description": "Implement a binary search tree with insert, search, traversal, and min/max operations",
+  "timeout": 60000,
+  "tags": ["data-structures", "trees", "algorithms"]
+}

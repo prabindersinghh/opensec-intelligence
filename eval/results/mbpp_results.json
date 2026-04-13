@@ -1,0 +1,46 @@
+{
+  "benchmark": "mbpp",
+  "model": "qwen3-coder:latest",
+  "timestamp": "2026-04-02T12:43:48.167Z",
+  "total": 5,
+  "passed": 4,
+  "pass@1": 0.8,
+  "results": [
+    {
+      "task_id": "MBPP/1",
+      "passed": false,
+      "duration_ms": 3806,
+      "raw_output": "```python\ndef min_cost(cost, m, n):\n    # Create a 2D array to store minimum cost\n    dp = [[0 for _ in range(len(cost[0]))] for _ in range(len(cost))]\n    \n    # Initialize the first cell\n    dp[0][0] = cost[0][0]\n    \n    # Initialize first row\n    for j in range(1, len(cost[0])):\n        dp[0][j] = dp[0][j-1] + cost[0][j]\n    \n    # Initialize first column\n    for i in range(1, len(cost)):\n        dp[i][0] = dp[i-1][0] + cost[i][0]\n    \n    # Fill the dp table\n    for i in range(1, len(cost)):\n        for j in range(1, len(cost[0])):\n            dp[i][j] = min(dp[i-1][j], dp[i][j-1]) + cost[i][j]\n    \n    return dp[m][n]\n```",
+      "extracted_code": "def min_cost(cost, m, n):\n    # Create a 2D array to store minimum cost\n    dp = [[0 for _ in range(len(cost[0]))] for _ in range(len(cost))]\n    \n    # Initialize the first cell\n    dp[0][0] = cost[0][0]\n    \n    # Initialize first row\n    for j in range(1, len(cost[0])):\n        dp[0][j] = dp[0][j-1] + cost[0][j]\n    \n    # Initialize first column\n    for i in range(1, len(cost)):\n        dp[i][0] = dp[i-1][0] + cost[i][0]\n    \n    # Fill the dp table\n    for i in range(1, len(cost)):\n        for j in range(1, len(cost[0])):\n            dp[i][j] = min(dp[i-1][j], dp[i][j-1]) + cost[i][j]\n    \n    return dp[m][n]",
+      "error": "Traceback (most recent call last):\n  File \"/var/folders/b9/fkrzv7_53212ynt_6md0wp3c0000gn/T/bench_so5dlakq.py\", line 23, in <module>\n    assert min_cost([[1, 2, 3], [4, 8, 2], [1, 5, 3]], 2, 2) == 8\n           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nAssertionError\n"
+    },
+    {
+      "task_id": "MBPP/2",
+      "passed": true,
+      "duration_ms": 2245,
+      "raw_output": "```python\ndef similar_elements(tuple_list1, tuple_list2):\n    \"\"\"\n    Find similar elements from two tuple lists.\n    \n    Args:\n        tuple_list1: First list of tuples\n        tuple_list2: Second list of tuples\n    \n    Returns:\n        List of tuples that are present in both lists\n    \"\"\"\n    # Convert lists to sets for intersection operation\n    set1 = set(tuple_list1)\n    set2 = set(tuple_list2)\n    \n    # Find intersection of both sets\n    similar = set1.intersection(set2)\n    \n    # Convert back to list and return\n    return list(similar)\n```",
+      "extracted_code": "def similar_elements(tuple_list1, tuple_list2):\n    \"\"\"\n    Find similar elements from two tuple lists.\n    \n    Args:\n        tuple_list1: First list of tuples\n        tuple_list2: Second list of tuples\n    \n    Returns:\n        List of tuples that are present in both lists\n    \"\"\"\n    # Convert lists to sets for intersection operation\n    set1 = set(tuple_list1)\n    set2 = set(tuple_list2)\n    \n    # Find intersection of both sets\n    similar = set1.intersection(set2)\n    \n    # Convert back to list and return\n    return list(similar)"
+    },
+    {
+      "task_id": "MBPP/3",
+      "passed": true,
+      "duration_ms": 2231,
+      "raw_output": "```python\ndef is_not_prime(n):\n    \"\"\"\n    Check if a number is not prime.\n    \n    Args:\n        n (int): The number to check\n        \n    Returns:\n        bool: True if the number is not prime, False if it is prime\n    \"\"\"\n    # Handle edge cases\n    if n < 2:\n        return True\n    \n    # Check if n is divisible by any number from 2 to sqrt(n)\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            return True\n    \n    return False\n```",
+      "extracted_code": "def is_not_prime(n):\n    \"\"\"\n    Check if a number is not prime.\n    \n    Args:\n        n (int): The number to check\n        \n    Returns:\n        bool: True if the number is not prime, False if it is prime\n    \"\"\"\n    # Handle edge cases\n    if n < 2:\n        return True\n    \n    # Check if n is divisible by any number from 2 to sqrt(n)\n    for i in range(2, int(n**0.5) + 1):\n        if n % i == 0:\n            return True\n    \n    return False"
+    },
+    {
+      "task_id": "MBPP/4",
+      "passed": true,
+      "duration_ms": 2134,
+      "raw_output": "```python\nimport heapq\n\ndef heap_queue_largest(numbers, n=1):\n    \"\"\"\n    Find the largest integers from a given list of numbers using heap queue algorithm.\n    \n    Args:\n        numbers: List of numbers\n        n: Number of largest elements to return (default is 1)\n    \n    Returns:\n        List of n largest numbers in descending order\n    \"\"\"\n    if not numbers or n <= 0:\n        return []\n    \n    if n >= len(numbers):\n        return sorted(numbers, reverse=True)\n    \n    return heapq.nlargest(n, numbers)\n```",
+      "extracted_code": "import heapq\n\ndef heap_queue_largest(numbers, n=1):\n    \"\"\"\n    Find the largest integers from a given list of numbers using heap queue algorithm.\n    \n    Args:\n        numbers: List of numbers\n        n: Number of largest elements to return (default is 1)\n    \n    Returns:\n        List of n largest numbers in descending order\n    \"\"\"\n    if not numbers or n <= 0:\n        return []\n    \n    if n >= len(numbers):\n        return sorted(numbers, reverse=True)\n    \n    return heapq.nlargest(n, numbers)"
+    },
+    {
+      "task_id": "MBPP/5",
+      "passed": true,
+      "duration_ms": 1186,
+      "raw_output": "```python\ndef is_perfect_square(n):\n    if n < 0:\n        return False\n    \n    if n == 0:\n        return True\n    \n    sqrt_n = int(n ** 0.5)\n    return sqrt_n * sqrt_n == n\n```",
+      "extracted_code": "def is_perfect_square(n):\n    if n < 0:\n        return False\n    \n    if n == 0:\n        return True\n    \n    sqrt_n = int(n ** 0.5)\n    return sqrt_n * sqrt_n == n"
+    }
+  ]
+}

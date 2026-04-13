@@ -1,0 +1,6 @@
+{
+  "prompt": "Add a function called 'multiply' to math.js that takes two numbers and returns their product. Export it.",
+  "tier": "easy",
+  "description": "Add a function to an existing module",
+  "timeout": 45000
+}

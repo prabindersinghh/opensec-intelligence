@@ -1,0 +1,6 @@
+{
+  "prompt": "Optimize the findDuplicates function in duplicates.js. It is currently O(n^2). Make it O(n) using a Set or Map.",
+  "tier": "hard",
+  "description": "Optimize an algorithm from O(n^2) to O(n)",
+  "timeout": 90000
+}

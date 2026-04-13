@@ -1,0 +1,30 @@
+node_modules/
+dist/
+*.js.map
+.DS_Store
+.env
+.env.*
+*.tsbuildinfo
+
+# Eval run artifacts (regenerable)
+eval/runs/
+eval/datasets/humaneval.jsonl
+
+# PDF report tool temp files
+.cmdr_report_gen.py
+.cmdr_report_data.json
+*.pdf
+
+# Planning docs & scratch files (not source code)
+cmdr_master.md
+phase completion.md
+evals.txt
+test_tty.py
+
+# Reference repos (not part of cmdr)
+claude-code-main/
+claw-code-main/
+open-multi-agent-main/
+gemini-cli-main/
+audit-report.pdf
+audit-report*.pdf

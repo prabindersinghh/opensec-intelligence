@@ -1,0 +1,10 @@
+.vscode/**
+node_modules/**
+*.ts
+*.tsx
+!dist/**
+webview/**
+chat/**
+tsconfig.json
+.vscodeignore
+*.vsix

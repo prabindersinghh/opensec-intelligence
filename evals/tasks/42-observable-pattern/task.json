@@ -1,0 +1,8 @@
+{
+  "prompt": "Create observable.js with an Observable class that implements the observer pattern. Support subscribe(observer) that returns an unsubscribe function, and static method 'of(...values)' that emits each value to subscribers. Also create operator functions: map(fn), filter(fn), and take(n) that return new Observables. Export Observable, map, filter, take.",
+  "tier": "hard",
+  "category": "architecture",
+  "description": "Implement Observable class with operators (map, filter, take)",
+  "timeout": 90000,
+  "tags": ["reactive", "observer-pattern", "functional"]
+}

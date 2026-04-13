@@ -1,0 +1,6 @@
+{
+  "prompt": "Refactor utils.js: extract the email validation logic into a separate function called 'isValidEmail' and export it",
+  "tier": "hard",
+  "description": "Extract a function from inline logic",
+  "timeout": 90000
+}

@@ -1,0 +1,8 @@
+{
+  "prompt": "Create dep-graph.js with a DependencyGraph class. It should support: addNode(name), addDependency(from, to), getOrder() that returns a topological sort, and detectCycle() that returns true if there's a circular dependency. Export the class.",
+  "tier": "hard",
+  "category": "architecture",
+  "description": "Implement a dependency graph with topological sort and cycle detection",
+  "timeout": 60000,
+  "tags": ["graphs", "algorithms", "topological-sort", "data-structures"]
+}

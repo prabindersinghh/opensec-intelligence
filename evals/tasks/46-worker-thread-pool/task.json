@@ -1,0 +1,8 @@
+{
+  "prompt": "Create worker-pool.js that exports a WorkerPool class using Node.js worker_threads. Constructor takes a worker script path and pool size. It should have: exec(data) that returns a Promise with the result, drain() that waits for all pending tasks to complete, and destroy() that terminates all workers. A sample worker.js is provided in the workspace that computes factorials.",
+  "tier": "hard",
+  "category": "performance",
+  "description": "Build a worker thread pool with task queuing",
+  "timeout": 90000,
+  "tags": ["worker-threads", "concurrency", "performance"]
+}

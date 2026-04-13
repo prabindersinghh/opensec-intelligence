@@ -1,0 +1,8 @@
+{
+  "prompt": "Create a reactive state management system in store.js. Export a createStore(initialState, reducers) function. The store should support: getState(), dispatch({ type, payload }), subscribe(listener) that returns an unsubscribe function, and computed(selector) that returns a getter for derived state. Reducers is an object mapping action types to (state, payload) => newState.",
+  "tier": "hard",
+  "category": "architecture",
+  "description": "Build a Redux-like reactive store with computed values",
+  "timeout": 120000,
+  "tags": ["state-management", "reactive", "architecture"]
+}

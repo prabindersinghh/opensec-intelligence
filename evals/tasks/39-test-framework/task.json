@@ -1,0 +1,8 @@
+{
+  "prompt": "Create a minimal test framework in test-framework.js. Export: describe(name, fn), it(name, fn), expect(val) with toBe, toEqual, toThrow matchers, and run() that executes all tests and returns { passed, failed, results }. Tests registered via describe/it should not run until run() is called.",
+  "tier": "hard",
+  "category": "testing",
+  "description": "Build a minimal test framework with describe/it/expect and deferred execution",
+  "timeout": 90000,
+  "tags": ["testing", "framework", "design-patterns"]
+}

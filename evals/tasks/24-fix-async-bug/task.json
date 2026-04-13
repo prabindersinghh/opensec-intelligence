@@ -1,0 +1,8 @@
+{
+  "prompt": "Fix the bug in fetcher.js. The 'fetchAll' function should wait for all fetches to complete before returning results.",
+  "tier": "medium",
+  "category": "debugging",
+  "description": "Fix an async bug where promises are not awaited",
+  "timeout": 30,
+  "tags": ["async", "promises", "debugging"]
+}

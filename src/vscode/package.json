@@ -1,0 +1,203 @@
+{
+  "name": "cmdr-vscode",
+  "displayName": "cmdr - Local AI Coding Assistant",
+  "description": "Local-first alternative to Copilot. Your models, your machine, your data.",
+  "version": "0.4.0",
+  "publisher": "sinisterchill",
+  "license": "SEE LICENSE IN LICENSE",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/reyyanxahmed/cmdr"
+  },
+  "icon": "icon.png",
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["AI", "Programming Languages", "Chat"],
+  "keywords": ["ai", "copilot", "local", "ollama", "coding-assistant", "privacy", "llm"],
+  "activationEvents": ["onStartupFinished"],
+  "main": "./dist/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "cmdr",
+          "title": "cmdr",
+          "icon": "$(terminal)"
+        }
+      ]
+    },
+    "views": {
+      "cmdr": [
+        {
+          "type": "webview",
+          "id": "cmdr.chatPanel",
+          "name": "Chat"
+        }
+      ]
+    },
+    "chatParticipants": [
+      {
+        "id": "cmdr.chat",
+        "name": "cmdr",
+        "description": "Local AI coding assistant powered by Ollama",
+        "isSticky": true
+      }
+    ],
+    "commands": [
+      { "command": "cmdr.openChat", "title": "cmdr: Open Chat", "icon": "$(comment-discussion)" },
+      { "command": "cmdr.explain", "title": "cmdr: Explain Selection" },
+      { "command": "cmdr.refactor", "title": "cmdr: Refactor Selection" },
+      { "command": "cmdr.writeTests", "title": "cmdr: Write Tests" },
+      { "command": "cmdr.fixDiagnostic", "title": "cmdr: Fix Error" },
+      { "command": "cmdr.review", "title": "cmdr: Review Changes" },
+      { "command": "cmdr.switchModel", "title": "cmdr: Switch Model" },
+      { "command": "cmdr.toggleInline", "title": "cmdr: Toggle Inline Completions" },
+      { "command": "cmdr.diff.accept", "title": "cmdr: Accept Diff", "icon": "$(check)" },
+      { "command": "cmdr.diff.reject", "title": "cmdr: Reject Diff", "icon": "$(close)" },
+      { "command": "cmdr.newChat", "title": "cmdr: New Chat Session", "icon": "$(add)" },
+      { "command": "cmdr.toggleAutoApprove", "title": "cmdr: Toggle Auto-Approve Tools" },
+      { "command": "cmdr.managePlugins", "title": "cmdr: Manage Plugins" },
+      { "command": "cmdr.manageHookifyRules", "title": "cmdr: Manage Hookify Rules" },
+      { "command": "cmdr.createHookifyRule", "title": "cmdr: Create Hookify Rule" },
+      { "command": "cmdr.toggleAutonomousLoop", "title": "cmdr: Toggle Autonomous Loop" },
+      { "command": "cmdr.cancelLoop", "title": "cmdr: Cancel Autonomous Loop" },
+      { "command": "cmdr.toggleDeferredMode", "title": "cmdr: Toggle Deferred Mode" }
+    ],
+    "menus": {
+      "editor/context": [
+        { "command": "cmdr.explain", "when": "editorHasSelection", "group": "cmdr@1" },
+        { "command": "cmdr.refactor", "when": "editorHasSelection", "group": "cmdr@2" },
+        { "command": "cmdr.writeTests", "when": "editorHasSelection", "group": "cmdr@3" },
+        { "command": "cmdr.fixDiagnostic", "group": "cmdr@4" }
+      ],
+      "commandPalette": [
+        { "command": "cmdr.diff.accept", "when": "cmdr.diff.isVisible" },
+        { "command": "cmdr.diff.reject", "when": "cmdr.diff.isVisible" }
+      ],
+      "editor/title": [
+        { "command": "cmdr.diff.accept", "when": "cmdr.diff.isVisible", "group": "navigation" },
+        { "command": "cmdr.diff.reject", "when": "cmdr.diff.isVisible", "group": "navigation" }
+      ],
+      "view/title": [
+        { "command": "cmdr.newChat", "when": "view == cmdr.chatPanel", "group": "navigation" }
+      ]
+    },
+    "keybindings": [
+      { "command": "cmdr.openChat", "key": "ctrl+shift+c", "mac": "cmd+shift+c" },
+      { "command": "cmdr.explain", "key": "ctrl+shift+e", "mac": "cmd+shift+e", "when": "editorHasSelection" }
+    ],
+    "configuration": {
+      "title": "cmdr",
+      "properties": {
+        "cmdr.model": {
+          "type": "string",
+          "default": "qwen3-coder",
+          "description": "Primary model for chat and code actions"
+        },
+        "cmdr.completionModel": {
+          "type": "string",
+          "default": "qwen2.5-coder:7b",
+          "description": "Lightweight model for inline completions (FIM)"
+        },
+        "cmdr.effort": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "max"],
+          "default": "medium",
+          "description": "Effort level for agent responses"
+        },
+        "cmdr.ollamaUrl": {
+          "type": "string",
+          "default": "http://localhost:11434",
+          "description": "Ollama server URL"
+        },
+        "cmdr.inlineCompletions": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable AI inline code completions"
+        },
+        "cmdr.autoStart": {
+          "type": "boolean",
+          "default": true,
+          "description": "Auto-start cmdr serve on activation"
+        },
+        "cmdr.port": {
+          "type": "number",
+          "default": 4200,
+          "description": "Port for cmdr serve HTTP server"
+        },
+        "cmdr.autoApprove": {
+          "type": "string",
+          "enum": ["ask", "auto"],
+          "default": "ask",
+          "description": "Tool approval mode: 'ask' prompts for each tool, 'auto' approves all automatically"
+        },
+        "cmdr.approvedTools": {
+          "type": "array",
+          "default": [],
+          "items": { "type": "string" },
+          "description": "List of tool names that are always auto-approved"
+        },
+        "cmdr.showTerminalOutput": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show terminal command output inline in chat"
+        },
+        "cmdr.useDiffEditor": {
+          "type": "boolean",
+          "default": true,
+          "description": "Use native VS Code diff editor for file changes"
+        },
+        "cmdr.hooks": {
+          "type": "object",
+          "default": {},
+          "description": "Hook configuration. Keys are hook types (PreToolUse, PostToolUse, Stop, etc), values are arrays of {matcher, command, timeout}",
+          "markdownDescription": "Hook configuration. See [hooks docs](https://github.com/reyyanxahmed/cmdr#hooks) for details."
+        },
+        "cmdr.sandbox": {
+          "type": "object",
+          "default": { "enabled": false },
+          "description": "Sandbox configuration for command isolation and network restrictions",
+          "properties": {
+            "enabled": { "type": "boolean", "default": false },
+            "excludedCommands": { "type": "array", "items": { "type": "string" } },
+            "allowedCommands": { "type": "array", "items": { "type": "string" } },
+            "dangerousPatterns": { "type": "array", "items": { "type": "string" } }
+          }
+        },
+        "cmdr.confidence": {
+          "type": "object",
+          "default": { "enabled": true, "threshold": 80, "hardBlockThreshold": 30 },
+          "description": "Confidence filtering for tool results. Scores outputs 0-100 and warns/blocks below threshold."
+        },
+        "cmdr.autonomousLoop": {
+          "type": "object",
+          "default": { "enabled": false, "maxIterations": 25, "requireApprovalEveryN": 0 },
+          "description": "Autonomous loop settings for iterative agent execution"
+        },
+        "cmdr.deferredMode": {
+          "type": "boolean",
+          "default": false,
+          "description": "Deferred/headless mode: pause at tool decisions and wait for explicit resume"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "npm run build:ext && npm run build:webview",
+    "build:ext": "esbuild extension.ts --bundle --outfile=dist/extension.js --external:vscode --format=cjs --platform=node",
+    "build:webview": "esbuild webview/app.tsx --bundle --outfile=dist/webview/app.js --format=iife --platform=browser --loader:.css=css --inject:./webview/react-shim.ts --minify && cp webview/styles/chat.css dist/webview/chat.css",
+    "watch": "npm run build:ext -- --watch & npm run build:webview -- --watch",
+    "package": "npm run build && vsce package",
+    "publish": "npm run build && vsce publish"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.90.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "esbuild": "^0.21.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "@vscode/vsce": "^3.0.0"
+  }
+}

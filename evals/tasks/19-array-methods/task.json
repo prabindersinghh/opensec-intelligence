@@ -1,0 +1,8 @@
+{
+  "prompt": "Create a file called array-utils.js that exports three functions: 'unique' (removes duplicates), 'flatten' (flattens nested arrays one level), and 'chunk' (splits array into groups of n).",
+  "tier": "easy",
+  "category": "code_gen",
+  "description": "Implement common array utility functions",
+  "timeout": 30,
+  "tags": ["arrays", "utilities", "functions"]
+}

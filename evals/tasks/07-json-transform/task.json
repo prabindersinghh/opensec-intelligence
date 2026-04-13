@@ -1,0 +1,6 @@
+{
+  "prompt": "Read data.json and create output.json that contains only the items where 'active' is true",
+  "tier": "medium",
+  "description": "Transform JSON data by filtering",
+  "timeout": 60000
+}

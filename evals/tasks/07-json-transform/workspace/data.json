@@ -1,0 +1,7 @@
+[
+  { "name": "Alice", "active": true },
+  { "name": "Bob", "active": false },
+  { "name": "Charlie", "active": true },
+  { "name": "Diana", "active": false },
+  { "name": "Eve", "active": true }
+]

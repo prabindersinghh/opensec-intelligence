@@ -1,0 +1,8 @@
+{
+  "prompt": "Create formatter.js that exports a 'format(code)' function for basic JavaScript formatting. It should: normalize indentation to 2 spaces, add spaces around operators (=, +, -, ===, !==, etc), ensure opening braces are on the same line as the statement, remove trailing whitespace, and ensure a final newline. Do not use any external libraries. A sample messy.js is in the workspace for testing.",
+  "tier": "hard",
+  "category": "code_gen",
+  "description": "Build a basic JS code formatter without external dependencies",
+  "timeout": 90000,
+  "tags": ["formatter", "string-processing", "code-quality"]
+}

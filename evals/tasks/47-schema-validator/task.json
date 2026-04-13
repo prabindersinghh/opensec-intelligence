@@ -1,0 +1,8 @@
+{
+  "prompt": "Create validator.js that exports a schema builder for data validation. The API: string() returns a string validator, number() returns a number validator, boolean() returns a boolean validator, object(shape) takes a shape object of validators, array(itemSchema) validates each item. Each validator has required() (default), optional(), min(n), max(n) where applicable. Calling validate(data) returns { valid: boolean, errors: string[] }.",
+  "tier": "hard",
+  "category": "code_gen",
+  "description": "Build a schema-based validation library",
+  "timeout": 120000,
+  "tags": ["validation", "schema", "builder-pattern"]
+}

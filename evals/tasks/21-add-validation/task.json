@@ -1,0 +1,8 @@
+{
+  "prompt": "Add input validation to user.js. The createUser function should throw an error if name is empty or email doesn't contain '@'.",
+  "tier": "medium",
+  "category": "code_edit",
+  "description": "Add input validation to an existing function",
+  "timeout": 30,
+  "tags": ["validation", "error-handling", "editing"]
+}

@@ -1,0 +1,8 @@
+{
+  "prompt": "Create calculator.js that parses and evaluates mathematical expressions from strings. Support +, -, *, / operators with correct precedence, parentheses, and negative numbers. Export a 'calculate(expression)' function. Do NOT use eval().",
+  "tier": "hard",
+  "category": "code_gen",
+  "description": "Build an expression parser/evaluator with operator precedence",
+  "timeout": 90000,
+  "tags": ["parser", "ast", "math", "recursion"]
+}

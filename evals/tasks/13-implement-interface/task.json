@@ -1,0 +1,6 @@
+{
+  "prompt": "Implement the Shape interface in shapes.js. Create classes Circle and Rectangle that implement the getArea() and getPerimeter() methods. Export them.",
+  "tier": "hard",
+  "description": "Implement an interface contract with two classes",
+  "timeout": 90000
+}

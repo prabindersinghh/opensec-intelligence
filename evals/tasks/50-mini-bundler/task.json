@@ -1,0 +1,8 @@
+{
+  "prompt": "Create a simple JavaScript module bundler with two files: bundler.js (exports a bundle(entryPath) function that resolves require() calls recursively, builds a dependency graph, and concatenates modules with IIFE wrappers so each module gets its own scope with a module.exports object) and cli.js (reads an entry file path from process.argv[2] and writes the bundle to bundle.js). Test it with the sample modules in the src/ directory.",
+  "tier": "hard",
+  "category": "multi_file",
+  "description": "Build a minimal JS module bundler with dependency resolution",
+  "timeout": 120000,
+  "tags": ["bundler", "require", "dependency-graph", "multi-file"]
+}

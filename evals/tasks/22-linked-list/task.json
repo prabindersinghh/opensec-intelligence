@@ -1,0 +1,8 @@
+{
+  "prompt": "Create linked-list.js with a LinkedList class. It should have append(value), prepend(value), toArray(), and size() methods. Export the class.",
+  "tier": "medium",
+  "category": "code_gen",
+  "description": "Implement a linked list data structure",
+  "timeout": 60,
+  "tags": ["data-structures", "linked-list", "classes"]
+}

@@ -1,0 +1,8 @@
+{
+  "prompt": "Create a minimal HTTP router system with three files: router.js (Router class with get/post/put/delete methods that register routes, supports :param path parameters, and a handle(method, url) method that returns the matching handler and extracted params), middleware.js (a compose function that takes middleware functions and returns a single handler), and server.js (ties them together with a createApp() function). Routes should match patterns like '/users/:id'.",
+  "tier": "hard",
+  "category": "multi_file",
+  "description": "Build HTTP router with param extraction and middleware",
+  "timeout": 120000,
+  "tags": ["http", "router", "middleware", "multi-file"]
+}

@@ -1,0 +1,8 @@
+{
+  "prompt": "Create a file called safe-parse.js that exports a function 'safeParse' which takes a JSON string and returns the parsed object, or null if parsing fails. Do not throw.",
+  "tier": "easy",
+  "category": "code_gen",
+  "description": "Create a safe JSON parsing function that returns null on failure",
+  "timeout": 30,
+  "tags": ["error-handling", "json", "functions"]
+}

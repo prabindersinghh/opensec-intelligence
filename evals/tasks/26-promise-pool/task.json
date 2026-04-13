@@ -1,0 +1,8 @@
+{
+  "prompt": "Create promise-pool.js that exports a function 'promisePool(tasks, concurrency)'. It takes an array of functions that return promises and a max concurrency number. It runs at most 'concurrency' tasks at a time and returns all results in order.",
+  "tier": "hard",
+  "category": "code_gen",
+  "description": "Implement a promise pool with concurrency control",
+  "timeout": 60,
+  "tags": ["async", "promises", "concurrency"]
+}

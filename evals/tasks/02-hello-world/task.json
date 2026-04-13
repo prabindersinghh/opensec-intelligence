@@ -1,0 +1,6 @@
+{
+  "prompt": "Create a Python script called hello.py that prints 'Hello, World!'",
+  "tier": "trivial",
+  "description": "Create a hello world Python script",
+  "timeout": 30000
+}

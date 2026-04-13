@@ -1,0 +1,8 @@
+{
+  "prompt": "Create state-machine.js with a StateMachine class. Constructor takes an initial state and a transitions object mapping 'state.event' to next state. It should have: currentState getter, send(event) method that transitions or throws, and onTransition(callback) for listening to state changes. Export the class.",
+  "tier": "hard",
+  "category": "architecture",
+  "description": "Implement a finite state machine",
+  "timeout": 60,
+  "tags": ["state-machine", "design-patterns", "architecture"]
+}

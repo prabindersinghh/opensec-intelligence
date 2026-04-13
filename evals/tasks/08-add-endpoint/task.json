@@ -1,0 +1,6 @@
+{
+  "prompt": "Add a GET /health endpoint to server.js that returns { status: 'ok' } as JSON",
+  "tier": "medium",
+  "description": "Add an HTTP endpoint to an existing Express-like server",
+  "timeout": 60000
+}

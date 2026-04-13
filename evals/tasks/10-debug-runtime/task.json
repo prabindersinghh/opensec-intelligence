@@ -1,0 +1,6 @@
+{
+  "prompt": "Fix the bug in calculate.js. The function 'average' is returning wrong results.",
+  "tier": "medium",
+  "description": "Debug and fix a runtime logic error",
+  "timeout": 60000
+}
