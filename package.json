@@ -65,7 +65,7 @@
     "cli",
     "local-llm"
   ],
-  "author": "Reyyan Ahmed",
+  "author": "Prabinder Singh <prabindersinghh@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",

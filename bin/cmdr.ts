@@ -172,11 +172,11 @@ async function main(): Promise<void> {
   }
 
   if (args.version) {
-    console.log(`${PURPLE.bold('OpenSec Intelligence')} ${GREEN(`v${VERSION}`)}`)
+    console.log(`${PURPLE.bold('OpenSec Intelligence')} ${GREEN(`v${VERSION}`)}  ${DIM('by Prabinder Singh')}`)
     process.exit(0)
   }
 
-  const ollamaUrl = args.ollamaUrl ?? process.env.CMDR_OLLAMA_URL ?? 'http://localhost:11434'
+  const ollamaUrl = args.ollamaUrl ?? process.env.OPENSEC_OLLAMA_URL ?? process.env.CMDR_OLLAMA_URL ?? 'http://localhost:11434'
 
   // Handle 'serve' subcommand: cmdr serve [--port N] [--host H] [-m model]
   if (args.serve) {
@@ -237,7 +237,7 @@ async function main(): Promise<void> {
   }
 
   // Auto-detect model if not specified
-  let model = args.model ?? process.env.CMDR_MODEL
+  let model = args.model ?? process.env.OPENSEC_MODEL ?? process.env.CMDR_MODEL
   if (!model) {
     try {
       const adapter = new OllamaAdapter(ollamaUrl)
@@ -282,8 +282,8 @@ async function main(): Promise<void> {
     // --cloud: switch provider to anthropic or openai for analyst/consensus
     let scanProvider = args.provider
     if (args.scanCloud) {
-      const anthropicKey = process.env.ANTHROPIC_API_KEY ?? process.env.CMDR_ANTHROPIC_API_KEY
-      const openaiKey = process.env.OPENAI_API_KEY ?? process.env.CMDR_OPENAI_API_KEY
+      const anthropicKey = process.env.ANTHROPIC_API_KEY ?? process.env.OPENSEC_ANTHROPIC_API_KEY
+      const openaiKey = process.env.OPENAI_API_KEY ?? process.env.OPENSEC_OPENAI_API_KEY
       if (anthropicKey) {
         scanProvider = 'anthropic'
         model = model ?? 'claude-opus-4-5'
@@ -323,6 +323,7 @@ async function main(): Promise<void> {
         effort: args.fast ? 'low' : args.effort,
         noBuddy: args.noBuddy,
       })
+      console.log(`\n  ${GREEN('✦')} ${chalk.white.bold('Scan complete')} ${DIM('—')} ${DIM('OpenSec Intelligence by Prabinder Singh')}`)
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err)
       console.error(renderError(msg))

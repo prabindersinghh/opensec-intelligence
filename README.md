@@ -9,105 +9,89 @@
  ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝╚══════╝╚══════╝ ╚═════╝ 
 </pre>
 
-**The Claude Code of security. Local-first. Model-agnostic. Free forever with Ollama.**
+**The Claude Code of security. Local-first. Free forever.**
 
+> **Built by [Prabinder Singh](https://github.com/prabindersinghh)**
+> B.Tech CS, Thapar Institute · Founder, Leorit.ai
+> [github.com/prabindersinghh](https://github.com/prabindersinghh)
+
+[![npm version](https://img.shields.io/npm/v/opensec-intelligence.svg)](https://www.npmjs.com/package/opensec-intelligence)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![Node](https://img.shields.io/badge/node-%3E%3D20-brightgreen)](package.json)
-[![Ollama](https://img.shields.io/badge/powered%20by-Ollama-blue)](https://ollama.com)
+[![Powered by Ollama](https://img.shields.io/badge/powered%20by-Ollama-blue)](https://ollama.com)
 
 </div>
 
 ---
 
-## What it does
-
-OpenSec Intelligence is a local-first AI security engine that finds, validates, and fixes vulnerabilities across your entire codebase in one command. It runs four specialized agents in sequence — Scanner, Analyst, Consensus, and Fixer — across code, infrastructure, configuration, and secrets simultaneously. No cloud required; runs free on any machine with Ollama.
-
----
-
-## Quick start
+## Quickstart
 
 ```bash
-# Install
 npm install -g opensec-intelligence
-
-# Pull a recommended model
 ollama pull qwen2.5-coder:14b
-
-# Scan your project
 opensec scan ./
 ```
 
 ---
 
-## Two modes
+## Why OpenSec Intelligence
 
-### Local (free)
-Runs entirely on your machine using Ollama. No API keys. No data leaves your environment.
+- **Four-agent pipeline.** Scanner maps the attack surface. Analyst finds the vulnerabilities. Consensus validates each finding independently and scores confidence. Fixer writes the exact patch. Nothing gets through that one model missed.
+- **Cross-modal analysis.** Code, Dockerfiles, Kubernetes YAML, Terraform, `.env` secrets, and OpenAPI specs are analyzed together. A weak auth bug in Python + an exposed port in Docker + a public endpoint in OpenAPI gets combined into one elevated finding — automatically.
+- **Zero cost by default.** Runs entirely on your machine with Ollama. No API keys. No data leaves your environment. Cloud mode is available when you need maximum accuracy.
 
-```bash
-opensec scan ./                    # Full 4-agent scan, local model
-opensec scan ./ --quick            # Scanner agent only, <2 min
-```
+---
 
-**Recommended models:** `qwen2.5-coder:14b`, `deepseek-r1:14b`, `codellama:13b`
+## Local vs Cloud
 
-### Cloud (hybrid)
-Uses your Anthropic or OpenAI key for the Analyst and Consensus agents only — the most reasoning-intensive steps. Scanner and Fixer stay local.
+| Mode | When to use | Command |
+|------|-------------|---------|
+| **Local** (free) | Daily scans, CI pipelines, private codebases | `opensec scan ./` |
+| **Cloud** (hybrid) | Maximum accuracy on critical audits | `opensec scan ./ --cloud` |
 
-```bash
-export ANTHROPIC_API_KEY=sk-ant-...
-opensec scan ./ --cloud            # Cloud-powered analysis
-```
+Cloud mode sends only the Analyst and Consensus steps to Anthropic or OpenAI — Scanner and Fixer always stay local.
 
 ---
 
 ## The 4 agents
 
-| Agent | Role | Output |
-|-------|------|--------|
-| **Scanner** | Maps the full attack surface — finds all code, config, secret, and infra files | Structured JSON: file paths + risk categories |
-| **Analyst** | Cross-modal vulnerability analysis — OWASP Top 10, Dockerfiles, k8s YAML, .env secrets, cross-file correlation | JSON findings: `{file, line_start, line_end, severity, type, cross_refs[]}` |
-| **Consensus** | Re-examines every HIGH/CRITICAL finding independently. Scores confidence 0.0–1.0. Filters anything below 0.7 | Validated findings with `exploit_scenario` + `cvss_estimate` |
-| **Fixer** | Writes exact code fixes with before/after diffs. Asks for human approval before each write. Summarizes via `git diff` | Patched files + change summary |
+| Agent | Job | Speed |
+|-------|-----|-------|
+| **Scanner** | Maps the full attack surface — every code, config, secret, and infra file | Fast |
+| **Analyst** | OWASP Top 10, Dockerfiles, k8s YAML, `.env` secrets, cross-file correlation | Thorough |
+| **Consensus** | Re-examines every HIGH/CRITICAL finding independently, scores confidence 0.0–1.0, filters below 0.7 | Precise |
+| **Fixer** | Writes exact patches with before/after diffs, asks approval before each write | Careful |
 
 ---
 
-## Supported file types
+## What gets scanned
 
-| Category | File types |
-|----------|-----------|
-| Code | `.py`, `.js`, `.ts`, `.go`, `.rb`, `.java`, `.php`, `.rs` |
-| Infrastructure | `Dockerfile`, `docker-compose.yml`, `*.tf` (Terraform), `*.hcl` |
-| Kubernetes / Config | `*.yaml`, `*.yml`, `openapi.*`, `*.json` (configs) |
-| Secrets | `.env`, `.env.*`, `*.pem`, `*.key`, `*.p12` |
-
----
-
-## Model recommendations (Ollama)
-
-| Use case | Recommended model |
-|----------|------------------|
-| Best overall | `qwen2.5-coder:14b` |
-| Deep reasoning | `deepseek-r1:14b` |
-| Fast sweep | `qwen2.5-coder:7b` |
-| Low RAM (<8 GB) | `codellama:7b` |
+| Category | Files |
+|----------|-------|
+| Code | `.py` `.js` `.ts` `.go` `.rb` `.java` `.php` `.rs` |
+| Infrastructure | `Dockerfile` `docker-compose.yml` `*.tf` `*.hcl` |
+| Kubernetes / Config | `*.yaml` `*.yml` `openapi.*` |
+| Secrets | `.env` `.env.*` `*.pem` `*.key` |
 
 ---
 
-## All commands
+## Model recommendations
+
+| Model | Best for |
+|-------|----------|
+| `qwen2.5-coder:14b` | Security analysis — best overall |
+| `deepseek-r1:14b` | Consensus reasoning |
+| `llama3.2:3b` | Fast scanner, low resource |
+| `codellama:13b` | Balanced speed and accuracy |
+
+---
+
+## MCP setup
 
 ```bash
-opensec scan [path]           Full 4-agent security scan
-opensec scan [path] --quick   Scanner agent only (fast sweep)
-opensec scan [path] --cloud   Cloud model for analyst + consensus
-opensec fix                   Apply fixer agent to last scan results
-opensec report                Generate HTML findings report
-opensec                       Interactive REPL (general security assistant)
+opensec serve --port 4141
+# Connect your MCP client to: http://localhost:4141/v1/stream
 ```
 
 ---
 
-## Credits
-
-Built on **[cmdr](https://github.com/reyyanxahmed/cmdr)** by [Reyyan Ahmed](https://github.com/reyyanxahmed) — an open-source multi-agent coding tool for the terminal, powered by Ollama. OpenSec Intelligence extends cmdr with a security-specialized agent pipeline, new CLI subcommands, and the OPENSEC.md configuration layer.
+<sub>OpenSec Intelligence is open source under the MIT License. Infrastructure powered by cmdr.</sub>

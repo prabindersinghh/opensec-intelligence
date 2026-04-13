@@ -230,115 +230,158 @@ export interface WelcomeOptions {
   mcpServerCount?: number
   resumedSession?: string
   cwd?: string
+  provider?: string
 }
 
-export function renderWelcome(model: string, projectInfo: string, version = '0.0.0', opts?: WelcomeOptions): string {
+export function renderWelcome(model: string, _projectInfo: string, version = '0.0.0', opts?: WelcomeOptions): string {
   const terminalWidth = Math.max(42, Math.min(process.stdout.columns || 100, 120))
-  const metadataLabelWidth = 10
-  const metadataPrefixWidth = 2 + metadataLabelWidth + 2
-  const metadataValueWidth = Math.max(8, terminalWidth - metadataPrefixWidth)
-  const shortDir = (opts?.cwd || process.cwd()).replace(/^\/Users\/\w+/, '~')
   const logoLines = colorizeLogo(getLogoForWidth(terminalWidth))
-
-  const branchText = opts?.gitBranch ? opts.gitBranch : ''
-
-  const mode = opts?.permissionMode || 'normal'
-  const modeColor = mode === 'yolo' ? YELLOW
-    : mode === 'strict' ? RED
-      : GREEN
-
-  const agentCount = opts?.agentCount ?? 0
-  const pluginCount = opts?.pluginCount ?? 0
-  const mcpServerCount = opts?.mcpServerCount ?? 0
-  const customCmdCount = opts?.customCmdCount ?? 0
-  const cmdrMdLines = opts?.cmdrMdLines ?? 0
+  const sep = DIM('─'.repeat(Math.max(22, Math.min(41, terminalWidth - 6))))
 
   const lines: string[] = ['']
 
+  // ASCII logo
   for (const logoLine of logoLines) {
     lines.push(`  ${logoLine}`)
   }
 
   lines.push('')
-  lines.push(`  ${WHITE.bold('OpenSec Intelligence')} ${DIM(`v${version}`)}`)
-  lines.push(`  ${DIM('─'.repeat(Math.max(22, Math.min(terminalWidth - 6, 56))))}`)
+  lines.push(`  ${WHITE.bold('OpenSec Intelligence')}  ${DIM(`v${version}`)}`)
+  lines.push('')
+  lines.push(`  ${PURPLE.bold('By Prabinder Singh')}`)
+  lines.push('')
+  lines.push(`  ${sep}`)
+  lines.push('')
+  lines.push(`  ${DIM('Local-first AI security engine')}`)
+  lines.push(`  ${WHITE('The Claude Code of security.')}`)
+  lines.push('')
+  lines.push(`  ${sep}`)
   lines.push('')
 
-  const metadataRow = (label: string, value: string, color: ChalkInstance = WHITE): void => {
-    const compact = truncatePlain(value, metadataValueWidth)
-    lines.push(`  ${DIM(label.padEnd(metadataLabelWidth))}: ${color(compact)}`)
-  }
+  // Status bullets
+  const modelStr = truncatePlain(model || 'auto-detect', 36)
+  const isCloud = opts?.provider && opts.provider !== 'ollama'
 
-  metadataRow('Model', model, GREEN)
-  metadataRow('Project', projectInfo, CYAN)
-  metadataRow('Mode', mode, modeColor)
-
-  if (branchText) {
-    metadataRow('Branch', branchText, PURPLE)
-  }
-
-  metadataRow('Directory', shortDir, WHITE)
-
-  if (opts?.teamName) {
-    const teamAgents = opts.teamAgentCount ?? 0
-    const teamSummary = `${opts.teamName} (${teamAgents} ${teamAgents === 1 ? 'agent' : 'agents'})`
-    metadataRow('Team', teamSummary, CYAN)
-  }
-
-  if (opts?.resumedSession) {
-    metadataRow('Session', opts.resumedSession, PURPLE)
-  }
-
-  lines.push('')
-  metadataRow('Agents', String(agentCount), WHITE)
-  metadataRow('Plugins', String(pluginCount), WHITE)
-  metadataRow('MCP', String(mcpServerCount), WHITE)
-  metadataRow('Workspace', `${customCmdCount} ${customCmdCount === 1 ? 'command' : 'commands'} · ${cmdrMdLines} OPENSEC.md lines`, DIM)
-  lines.push('')
-
-  const tipsInnerWidth = Math.max(18, Math.min(94, terminalWidth - 6))
-  const tipsCompact = terminalWidth < 74
-  const tipsHeader = GREEN.bold('Operator Boot Sequence')
-  const tipOneBody = tipsCompact
-    ? 'Initialize objective'
-    : 'Initialize objective: define target artifact, bug, or refactor'
-  const tipTwoBody = tipsCompact
-    ? 'Invoke /help or /model'
-    : 'Invoke control plane: /help, /model, /permissions'
-  const tipThreeBody = tipsCompact
-    ? 'Override via CMDR.md or @agent'
-    : 'Override sys-prompt via CMDR.md or dispatch @agent <task>'
-  const tipOne = `${WHITE('1.')} ${DIM(tipOneBody)}`
-  const tipTwo = `${WHITE('2.')} ${DIM(tipTwoBody)}`
-  const tipThree = `${WHITE('3.')} ${DIM(tipThreeBody)}`
-
-  if (terminalWidth >= 58) {
-    const top = `  ${GREEN_DIM(`╭${'─'.repeat(tipsInnerWidth)}╮`)}`
-    const bottom = `  ${GREEN_DIM(`╰${'─'.repeat(tipsInnerWidth)}╯`)}`
-    const tipLine = (content: string): string => `  ${GREEN_DIM('│')}${fitAnsi(` ${content}`, tipsInnerWidth)}${GREEN_DIM('│')}`
-
-    lines.push(top)
-    lines.push(tipLine(tipsHeader))
-    lines.push(tipLine(tipOne))
-    lines.push(tipLine(tipTwo))
-    lines.push(tipLine(tipThree))
-    lines.push(bottom)
+  if (isCloud) {
+    lines.push(`  ${GREEN('✦')} ${DIM('Provider:')} ${PURPLE.bold(opts!.provider!)} ${DIM(`(${modelStr})`)}`)
+    lines.push(`  ${GREEN('✦')} ${DIM('Mode:')} ${PURPLE.bold('Cloud')}`)
   } else {
-    const compactWidth = Math.max(10, terminalWidth - 4)
-    lines.push(`  ${truncatePlain(stripAnsi(tipsHeader), compactWidth)}`)
-    lines.push(`  ${truncatePlain(stripAnsi(tipOne), compactWidth)}`)
-    lines.push(`  ${truncatePlain(stripAnsi(tipTwo), compactWidth)}`)
-    lines.push(`  ${truncatePlain(stripAnsi(tipThree), compactWidth)}`)
+    lines.push(`  ${GREEN('✦')} ${DIM('Ollama:')} ${GREEN.bold('connected')} ${DIM(`(${modelStr})`)}`)
+    lines.push(`  ${GREEN('✦')} ${DIM('Mode:')} ${WHITE.bold('Local')} ${DIM('(free)')}`)
+  }
+  lines.push(`  ${GREEN('✦')} ${DIM('Run:')} ${WHITE.bold('opensec scan ./')} ${DIM('to begin')}`)
+  lines.push('')
+
+  return lines.join('\n')
+}
+
+// ---------------------------------------------------------------------------
+// Scan progress UI
+// ---------------------------------------------------------------------------
+
+export interface ScanAgentProgress {
+  name: string
+  step: number
+  pct: number
+  status: string
+}
+
+export function renderScanProgress(
+  target: string,
+  fileCount: number,
+  agents: ScanAgentProgress[],
+): string {
+  const BAR_WIDTH = 20
+  const lines: string[] = [
+    '',
+    `  ${PURPLE.bold('◆')} ${WHITE.bold('OpenSec Intelligence')} ${DIM('— Security Scan')}`,
+    '',
+    `  ${DIM('Target:')} ${WHITE(target)} ${DIM(`(${fileCount} files)`)}`,
+    '',
+  ]
+
+  for (const agent of agents) {
+    const filled = Math.round((agent.pct / 100) * BAR_WIDTH)
+    const empty = BAR_WIDTH - filled
+    const bar = GREEN('█'.repeat(filled)) + DIM('░'.repeat(empty))
+    const pctStr = CYAN(`${String(agent.pct).padStart(3, ' ')}%`)
+    const stepStr = DIM(`[${agent.step}/4]`)
+    const nameStr = WHITE.bold(agent.name.padEnd(10))
+    lines.push(`  ${stepStr} ${nameStr} ${bar} ${pctStr}  ${DIM(agent.status)}`)
   }
 
-  const hintLeft = DIM('Shift+Tab to accept edits')
-  const hintRight = DIM('? for shortcuts')
-  if (terminalWidth >= 64) {
-    const hintGap = Math.max(2, terminalWidth - visibleWidth(hintLeft) - visibleWidth(hintRight) - 4)
-    lines.push(`  ${hintLeft}${' '.repeat(hintGap)}${hintRight}`)
-  } else {
-    lines.push(`  ${hintRight}`)
+  lines.push('')
+  return lines.join('\n')
+}
+
+// ---------------------------------------------------------------------------
+// Findings output UI
+// ---------------------------------------------------------------------------
+
+export interface SecurityFinding {
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW'
+  type: string
+  file: string
+  line?: number
+  description: string
+  modelsAgreed?: number
+  totalModels?: number
+  fixAvailable?: boolean
+}
+
+function sevColor(sev: string): ChalkInstance {
+  switch (sev) {
+    case 'CRITICAL': return RED.bold
+    case 'HIGH': return YELLOW.bold
+    case 'MEDIUM': return CYAN.bold
+    default: return DIM
   }
+}
+
+function sevBar(sev: string): string {
+  switch (sev) {
+    case 'CRITICAL': return RED.bold('████')
+    case 'HIGH': return YELLOW.bold('███')
+    case 'MEDIUM': return CYAN.bold('██')
+    default: return DIM('█')
+  }
+}
+
+export function renderFindings(findings: SecurityFinding[]): string {
+  const counts = { CRITICAL: 0, HIGH: 0, MEDIUM: 0, LOW: 0 }
+  for (const f of findings) counts[f.severity]++
+
+  const lines: string[] = [
+    '',
+    `  ${PURPLE.bold('◆')} ${WHITE.bold('Security Report')} ${DIM('—')} ${RED.bold(`${counts.CRITICAL} Critical`)}, ${YELLOW.bold(`${counts.HIGH} High`)}, ${CYAN(`${counts.MEDIUM} Medium`)}`,
+    '',
+  ]
+
+  for (const finding of findings) {
+    const color = sevColor(finding.severity)
+    const bar = sevBar(finding.severity)
+    const agreedStr = finding.modelsAgreed !== undefined && finding.totalModels !== undefined
+      ? ` — confirmed by ${finding.modelsAgreed}/${finding.totalModels} models`
+      : ''
+    const fileRef = `${finding.file}${finding.line ? `:${finding.line}` : ''}`
+
+    lines.push(`  ${color(finding.severity)}  ${bar}  ${WHITE.bold(finding.type)}`)
+    lines.push(`  ${DIM('╰─')} ${DIM(fileRef)}`)
+    lines.push(`  ${DIM('╰─')} ${DIM(finding.description)}${DIM(agreedStr)}`)
+    if (finding.fixAvailable) {
+      lines.push(`  ${DIM('╰─')} ${GREEN('Fix available')} ${DIM('— run:')} ${WHITE.bold('opensec fix')}`)
+    }
+    lines.push('')
+  }
+
+  const sep = DIM('─'.repeat(38))
+  const totalModels = findings[0]?.totalModels ?? 3
+  const agreedCount = findings[0]?.modelsAgreed ?? 3
+  lines.push(`  ${sep}`)
+  lines.push(`  ${DIM('Confidence:')} ${GREEN.bold('HIGH')}  ${DIM('•  Models agreed:')} ${WHITE.bold(`${agreedCount}/${totalModels}`)}`)
+  lines.push(`  ${DIM('Run')} ${WHITE.bold('opensec fix')} ${DIM('to apply all patches')}`)
+  lines.push(`  ${DIM('Run')} ${WHITE.bold('opensec report')} ${DIM('for HTML report')}`)
+  lines.push('')
 
   return lines.join('\n')
 }

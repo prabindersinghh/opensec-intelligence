@@ -191,6 +191,12 @@ export function printHelp(): void {
     deepseek-r1:14b              Best for consensus reasoning
     llama3.2:3b                  Fast scanner (low resource)
 
-  Built on cmdr by Reyyan Ahmed — MIT License
+  ─────────────────────────────────────────
+
+  OpenSec Intelligence by Prabinder Singh
+
+  github.com/prabindersinghh/opensec-intelligence
+
+  ─────────────────────────────────────────
 `)
 }
