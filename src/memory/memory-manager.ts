@@ -106,7 +106,7 @@ export class MemoryManager {
     const timestamp = new Date().toISOString().split('T')[0]
     const newContent = existing
       ? `${existing.trimEnd()}\n\n## ${timestamp}\n${entry.trim()}\n`
-      : `# CMDR Memory\n\n## ${timestamp}\n${entry.trim()}\n`
+      : `# OpenSec Memory\n\n## ${timestamp}\n${entry.trim()}\n`
     await this.write(scope, newContent)
   }
 }

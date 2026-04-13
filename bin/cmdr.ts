@@ -180,7 +180,7 @@ async function main(): Promise<void> {
 
   // Handle 'serve' subcommand: cmdr serve [--port N] [--host H] [-m model]
   if (args.serve) {
-    const model = args.model ?? process.env.CMDR_MODEL ?? 'qwen2.5-coder:14b'
+    const model = args.model ?? process.env.OPENSEC_MODEL ?? process.env.CMDR_MODEL ?? 'qwen2.5-coder:14b'
     await startServer({
       port: args.port ?? 4141,
       host: args.host ?? '127.0.0.1',

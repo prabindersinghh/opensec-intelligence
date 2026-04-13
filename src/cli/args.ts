@@ -2,6 +2,7 @@
  * CLI argument parsing.
  */
 
+import chalk from 'chalk'
 import type { EffortLevel } from '../core/types.js'
 
 export interface CliArgs {
@@ -168,35 +169,37 @@ export function parseArgs(argv: string[]): CliArgs {
 }
 
 export function printHelp(): void {
-  console.log(`
-  OpenSec Intelligence — local-first AI security engine
+  const GREEN = chalk.hex('#00FF94').bold
+  const PINK = chalk.hex('#FF2D78').bold
+  const DIM = chalk.gray
+  const SEP = chalk.hex('#FF2D78').dim('─'.repeat(41))
 
-  SCAN COMMANDS
+  console.log(`
+  ${chalk.white.bold('OpenSec Intelligence')} ${DIM('— local-first AI security engine')}
+
+  ${GREEN('SCAN COMMANDS')}
     opensec scan [path]          Full 4-agent security scan (default: ./)
     opensec scan [path] --quick  Scanner only, fast sweep
     opensec scan [path] --cloud  Cloud models for analyst + consensus
 
-  FIX & REPORT
+  ${GREEN('FIX & REPORT')}
     opensec fix                  Apply fixes from last scan
     opensec report               Generate HTML security report
 
-  GENERAL
+  ${GREEN('GENERAL')}
     opensec -m <model>           Set Ollama model
     opensec serve                Start HTTP API server
     opensec --help               Show this help
     opensec --version            Show version
 
-  RECOMMENDED MODELS
+  ${GREEN('RECOMMENDED MODELS')}
     qwen2.5-coder:14b            Best for security analysis
     deepseek-r1:14b              Best for consensus reasoning
     llama3.2:3b                  Fast scanner (low resource)
 
-  ─────────────────────────────────────────
-
-  OpenSec Intelligence by Prabinder Singh
-
-  github.com/prabindersinghh/opensec-intelligence
-
-  ─────────────────────────────────────────
+  ${SEP}
+  ${GREEN('OpenSec Intelligence')} ${PINK('by Prabinder Singh')}
+  ${DIM('github.com/prabindersinghh/opensec-intelligence')}
+  ${SEP}
 `)
 }

@@ -12,15 +12,15 @@ import { getActiveTheme } from './themes.js'
 // Core palette — theme-aware getters with fallback constants
 // ---------------------------------------------------------------------------
 
-/** Primary action accent (prompt/user) */
-export const GREEN = chalk.hex('#7CFF5B')
-/** Border/separator ink */
-export const GREEN_DIM = chalk.hex('#314656')
-/** Assistant/responding accent */
-export const PURPLE = chalk.hex('#2DD4BF')
-/** Secondary accent */
-export const PURPLE_DIM = chalk.hex('#22D3EE')
-/** Tool execution accent */
+/** Primary action accent — neon green */
+export const GREEN = chalk.hex('#00FF94')
+/** Border / separator ink — dark green */
+export const GREEN_DIM = chalk.hex('#004D2A')
+/** Primary brand accent — hot pink */
+export const PURPLE = chalk.hex('#FF2D78')
+/** Dim pink for secondary accents */
+export const PURPLE_DIM = chalk.hex('#99002B')
+/** Tool execution accent — amber */
 export const CYAN = chalk.hex('#F59E0B')
 /** Muted tool accent */
 export const CYAN_DIM = chalk.hex('#8A6A36')
@@ -29,11 +29,11 @@ export const YELLOW = chalk.hex('#FBBF24')
 /** Error */
 export const RED = chalk.hex('#FF5D5D')
 /** Primary text */
-export const WHITE = chalk.hex('#D5DEE6')
-/** Secondary text */
-export const DIM = chalk.hex('#72808F')
+export const WHITE = chalk.hex('#F2F7FB')
+/** Secondary / muted text */
+export const DIM = chalk.gray
 /** Emphasis text */
-export const BRIGHT = chalk.hex('#F2F7FB')
+export const BRIGHT = chalk.white.bold
 
 // Theme-aware color accessors (re-evaluated on each call)
 export function themeGreen(): ChalkInstance { return chalk.hex(getActiveTheme().ui.prompt) }
@@ -104,7 +104,7 @@ export const ERROR_SYMBOL = RED('✗')
 /** Info indicator */
 export const INFO_SYMBOL = PURPLE_DIM('ℹ')
 /** Separator line */
-export const SEPARATOR = GREEN_DIM('─'.repeat(60))
+export const SEPARATOR = chalk.hex('#99002B')('─'.repeat(60))
 
 // ---------------------------------------------------------------------------
 // Tool lifecycle indicators
@@ -148,13 +148,13 @@ const CMDR_LOGO_TINY = [
 ]
 
 const LOGO_GRADIENT_HEX = [
-  '#7CFF5B',
-  '#57C43F',
-  '#2E6622',
-  '#0D0D0D',
-  '#3C0D0D',
-  '#972525',
-  '#FF5D5D',
+  '#00FF94',
+  '#55FFB7',
+  '#AAFFD9',
+  '#FFB3D1',
+  '#FF5A9D',
+  '#FF2D78',
+  '#FF2D78',
 ]
 
 function stripAnsi(value: string): string {
@@ -236,7 +236,6 @@ export interface WelcomeOptions {
 export function renderWelcome(model: string, _projectInfo: string, version = '0.0.0', opts?: WelcomeOptions): string {
   const terminalWidth = Math.max(42, Math.min(process.stdout.columns || 100, 120))
   const logoLines = colorizeLogo(getLogoForWidth(terminalWidth))
-  const sep = DIM('─'.repeat(Math.max(22, Math.min(41, terminalWidth - 6))))
 
   const lines: string[] = ['']
 
@@ -245,17 +244,16 @@ export function renderWelcome(model: string, _projectInfo: string, version = '0.
     lines.push(`  ${logoLine}`)
   }
 
+  const pinkSep = chalk.hex('#FF2D78').dim('─'.repeat(Math.max(22, Math.min(41, terminalWidth - 6))))
+
   lines.push('')
-  lines.push(`  ${WHITE.bold('OpenSec Intelligence')}  ${DIM(`v${version}`)}`)
-  lines.push('')
+  lines.push(`  ${GREEN.bold('OpenSec Intelligence')}  ${DIM(`v${version}`)}`)
   lines.push(`  ${PURPLE.bold('By Prabinder Singh')}`)
   lines.push('')
-  lines.push(`  ${sep}`)
-  lines.push('')
-  lines.push(`  ${DIM('Local-first AI security engine')}`)
-  lines.push(`  ${WHITE('The Claude Code of security.')}`)
-  lines.push('')
-  lines.push(`  ${sep}`)
+  lines.push(`  ${pinkSep}`)
+  lines.push(`  ${chalk.white.bold('Local-first AI security engine')}`)
+  lines.push(`  ${chalk.white.bold('The Claude Code of security.')}`)
+  lines.push(`  ${pinkSep}`)
   lines.push('')
 
   // Status bullets
@@ -263,13 +261,13 @@ export function renderWelcome(model: string, _projectInfo: string, version = '0.
   const isCloud = opts?.provider && opts.provider !== 'ollama'
 
   if (isCloud) {
-    lines.push(`  ${GREEN('✦')} ${DIM('Provider:')} ${PURPLE.bold(opts!.provider!)} ${DIM(`(${modelStr})`)}`)
-    lines.push(`  ${GREEN('✦')} ${DIM('Mode:')} ${PURPLE.bold('Cloud')}`)
+    lines.push(`  ${GREEN('✦')} ${chalk.white.bold('Provider:')} ${PURPLE.bold(opts!.provider!)} ${DIM(`(${modelStr})`)}`)
+    lines.push(`  ${GREEN('✦')} ${chalk.white.bold('Mode:')} ${PURPLE.bold('Cloud')}`)
   } else {
-    lines.push(`  ${GREEN('✦')} ${DIM('Ollama:')} ${GREEN.bold('connected')} ${DIM(`(${modelStr})`)}`)
-    lines.push(`  ${GREEN('✦')} ${DIM('Mode:')} ${WHITE.bold('Local')} ${DIM('(free)')}`)
+    lines.push(`  ${GREEN('✦')} ${chalk.white.bold('Ollama: connected')} ${DIM(`(${modelStr})`)}`)
+    lines.push(`  ${GREEN('✦')} ${chalk.white.bold('Mode: Local')} ${DIM('(free)')}`)
   }
-  lines.push(`  ${GREEN('✦')} ${DIM('Run:')} ${WHITE.bold('opensec scan ./')} ${DIM('to begin')}`)
+  lines.push(`  ${GREEN('✦')} ${chalk.white.bold('Run:')} ${GREEN.bold('opensec scan ./')} ${DIM('to begin')}`)
   lines.push('')
 
   return lines.join('\n')

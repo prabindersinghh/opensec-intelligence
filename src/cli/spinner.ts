@@ -81,7 +81,7 @@ function loadVerbConfig(): void {
 
   const configPath = path.join(
     process.env.HOME ?? process.env.USERPROFILE ?? '.',
-    '.cmdr',
+    '.opensec',
     'config.toml',
   )
 

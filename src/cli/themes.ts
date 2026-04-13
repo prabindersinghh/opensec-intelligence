@@ -230,8 +230,8 @@ const solarizedDark: CmdrTheme = {
 export const BUILT_IN_THEMES: Record<string, CmdrTheme> = {
   'industrial-terminal': industrialTerminal,
   'industrial-light': industrialLight,
-  'cmdr-dark': industrialTerminal,
-  'cmdr-light': industrialLight,
+  'opensec-dark': industrialTerminal,
+  'opensec-light': industrialLight,
   'monokai': monokai,
   'nord': nord,
   'solarized-dark': solarizedDark,
