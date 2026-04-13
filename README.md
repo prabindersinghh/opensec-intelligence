@@ -257,6 +257,48 @@ opensec daemon start          # Watch mode — scan on file change
 
 ---
 
+## Pro & Enterprise — Coming Soon
+
+OpenSec Intelligence is free forever for local single-model scanning.
+
+Pro and Enterprise tiers are in development for teams and organizations
+that need maximum accuracy and zero false positives.
+
+### 🔥 Pro  — Coming Soon
+- **Multi-model consensus** — 3 AI models scan simultaneously,
+  only findings 2+ models agree on get through
+- **Zero false positive guarantee** — confidence threshold 0.95+
+- **Cloud + local hybrid** — best of both worlds
+- **Priority scanning** — larger repos, faster results
+- **PDF security reports** — shareable compliance-ready reports
+- **Slack / Discord alerts** — findings posted to your team channel
+
+### 🏢 Enterprise (Custom) — Coming Soon
+- **Air-gapped deployment** — fully offline, no internet required
+- **Custom model support** — bring your own fine-tuned security model
+- **CI/CD dashboard** — org-wide security posture in one view
+- **SARIF output** — integrates with GitHub Advanced Security
+- **SSO + team management** — role-based access control
+- **SLA + dedicated support** — 99.9% uptime guarantee
+- **Compliance reports** — SOC2, ISO 27001, OWASP ready
+
+### 🚀 Roadmap
+- [ ] Multi-model parallel scanning (--multi-model flag)
+- [ ] VS Code extension with inline vulnerability highlights
+- [ ] GitHub App — auto-scan every PR, post findings as comments
+- [ ] Web dashboard for team findings
+- [ ] Custom security rules engine
+- [ ] SARIF + GitHub Advanced Security integration
+- [ ] Slack / Discord bot
+- [ ] API access for custom integrations
+
+### Join the Waitlist
+Pro and Enterprise are currently in private beta.
+
+**[Join the waitlist →](mailto:prabindersinghh@gmail.com)**
+
+---
+
 ## Contributing
 
 See [CONTRIBUTING.md](CONTRIBUTING.md). Security researchers, AI engineers, and open source contributors welcome.
