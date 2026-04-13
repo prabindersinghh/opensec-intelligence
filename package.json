@@ -1,6 +1,6 @@
 {
   "name": "opensec-intelligence",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Local-first, model-agnostic AI security engine. Free forever with Ollama.",
   "type": "module",
   "bin": {
