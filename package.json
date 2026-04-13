@@ -1,7 +1,7 @@
 {
   "name": "opensec-intelligence",
   "version": "3.0.1",
-  "description": "Local-first, model-agnostic AI security engine. Free forever with Ollama.",
+  "description": "The security engine Claude Code doesn't have. Local-first, free forever, 4-agent AI pipeline.",
   "type": "module",
   "bin": {
     "opensec": "./bin/opensec.js"

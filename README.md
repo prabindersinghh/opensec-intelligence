@@ -14,6 +14,8 @@
 
 <br/>
 
+[![The Security Layer Claude Code Doesn't Have](https://img.shields.io/badge/the%20security%20layer-Claude%20Code%20doesn't%20have-FF2D78?style=for-the-badge)](https://github.com/prabindersinghh/opensec-intelligence)
+
 [![npm version](https://img.shields.io/npm/v/opensec-intelligence?color=FF2D78&label=npm&style=flat-square)](https://www.npmjs.com/package/opensec-intelligence)
 [![npm downloads](https://img.shields.io/npm/dw/opensec-intelligence?color=00FF94&style=flat-square)](https://www.npmjs.com/package/opensec-intelligence)
 [![License: MIT](https://img.shields.io/badge/License-MIT-white?style=flat-square)](LICENSE)
@@ -36,6 +38,8 @@
 
 Claude Code writes your code. **OpenSec Intelligence secures it.**
 
+> 💬 "Claude Code writes your code. OpenSec Intelligence makes sure it doesn't get hacked."
+
 A four-agent AI pipeline that scans your entire codebase — code, infrastructure, secrets, configs — finds real vulnerabilities, validates them with consensus scoring, and writes the exact patches. Runs completely free on your machine with Ollama. No data leaves your environment.
 
 ```bash
@@ -47,6 +51,14 @@ opensec scan ./
 ---
 
 ## Why it beats everything else
+
+| | Claude Code | OpenSec Intelligence |
+|---|---|---|
+| Security scanning | ❌ Not built for it | ✅ Purpose-built, 4-agent pipeline |
+| Cost | $20/month | **Free forever** |
+| Local/private | ❌ Cloud only | ✅ 100% on your machine |
+| Fixes vulnerabilities | ❌ | ✅ Writes exact patches |
+| Multi-model consensus | ❌ | ✅ 3+ models validate each finding |
 
 | | Existing tools | OpenSec Intelligence |
 |---|---|---|
