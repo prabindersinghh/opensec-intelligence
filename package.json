@@ -4,14 +4,13 @@
   "description": "Local-first, model-agnostic AI security engine. Free forever with Ollama.",
   "type": "module",
   "bin": {
-    "cmdr": "./dist/bin/cmdr.js",
     "opensec": "./dist/bin/cmdr.js"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "postbuild": "cp package.json dist/package.json && chmod +x dist/bin/cmdr.js",
+    "postbuild": "node -e \"require('fs').copyFileSync('package.json','dist/package.json')\"",
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
