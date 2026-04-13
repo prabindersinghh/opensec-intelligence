@@ -4,7 +4,7 @@
   "description": "Local-first, model-agnostic AI security engine. Free forever with Ollama.",
   "type": "module",
   "bin": {
-    "opensec": "./dist/bin/cmdr.js"
+    "opensec": "./bin/opensec.js"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -21,6 +21,7 @@
   },
   "files": [
     "dist",
+    "bin/opensec.js",
     "LICENSE",
     "README.md"
   ],
