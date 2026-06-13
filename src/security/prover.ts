@@ -165,12 +165,14 @@ export const SKIP_REASONS: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 interface ExploitGenResponse {
-  lang: string
+  lang: ExploitLang
   code: string
-  maliciousInput: string
 }
 
 function buildExploitPrompt(finding: Finding, fileContent: string): string {
+  const truncated = fileContent.length > 3000
+  const content = fileContent.slice(0, 3000) + (truncated ? '\n[...truncated]' : '')
+
   return `You are a security researcher writing a minimal proof-of-concept exploit.
 
 VULNERABILITY:
@@ -181,7 +183,7 @@ VULNERABILITY:
 - Snippet: ${finding.snippet}
 
 FULL FILE CONTENT:
-${fileContent.slice(0, 3000)}
+${content}
 
 TASK: Write the SMALLEST possible self-contained script that:
 1. Calls the vulnerable function/endpoint with a malicious input
@@ -201,17 +203,16 @@ VULN-SPECIFIC GUIDANCE:
 - JWT Secret Hardcoded: read exported JWT_SECRET, confirm it is not from env
 - Database URL with Credentials: read exported connection string, check it contains '@'
 - eval() Usage: call the function with 'EXPLOITED_TOKEN', check output contains it
-- Insecure Random for Secret: call function 5 times, check values are all different but < 24 hex chars
+- Insecure Random for Secret: call the function, verify Math.random was invoked (not crypto.randomBytes) by checking output is predictable/seeded; print EXPLOITED: math.random used for secret
 - SQL Injection — String Concat / Template Literal: call with "' OR '1'='1", check rows.length > 0
 - Command Injection: call with "; echo EXPLOITED_CMD", check output contains EXPLOITED_CMD
-- CORS Wildcard: call setCorsHeaders, check returned header is '*'
+- CORS Wildcard: pass a mock res object with getHeader/setHeader, call the function, check res.getHeader('Access-Control-Allow-Origin') === '*'
 - Hardcoded API Key: read exported api key value, confirm it is a string literal
 
 OUTPUT FORMAT — respond ONLY with this JSON (no explanation, no markdown):
 {
   "lang": "javascript",
-  "code": "<full exploit script with \\n newlines>",
-  "maliciousInput": "<the input used>"
+  "code": "<full exploit script with \\n newlines>"
 }`
 }
 
@@ -226,9 +227,8 @@ export async function prove(
   onProgress: (msg: string) => void,
   dryRun = false,
 ): Promise<ProofResult> {
-  const empty: ExploitResult = { success: false, input: '', output: '', exitCode: 0, duration: 0 }
+  const empty: ExploitResult = { success: false, input: '', output: '', exitCode: -1, duration: 0 }
 
-  // 1. Check if this vuln class is auto-provable
   if (!PROVABLE_VULN_CLASSES.has(finding.ruleName)) {
     return {
       findingId: finding.id,
@@ -242,66 +242,86 @@ export async function prove(
     }
   }
 
-  // 2. Read target file
   let fileContent = ''
   try {
     fileContent = readFileSync(path.join(projectRoot, finding.file), 'utf8')
   } catch {
     return {
-      findingId: finding.id, exploitCode: '', exploitLang: 'javascript',
-      beforePatch: empty, afterPatch: empty, verified: false, skipped: true,
+      findingId: finding.id,
+      exploitCode: '',
+      exploitLang: 'javascript',
+      beforePatch: empty,
+      afterPatch: empty,
+      verified: false,
+      skipped: true,
       skipReason: `cannot read ${finding.file}`,
     }
   }
 
-  // 3. Generate exploit via LLM
   onProgress(`Generating exploit for ${finding.ruleName}…`)
   const raw = await generateJson<ExploitGenResponse>(llm, buildExploitPrompt(finding, fileContent), 2)
 
   if (!raw?.code) {
     return {
-      findingId: finding.id, exploitCode: '', exploitLang: 'javascript',
-      beforePatch: empty, afterPatch: empty, verified: false, skipped: true,
+      findingId: finding.id,
+      exploitCode: '',
+      exploitLang: 'javascript',
+      beforePatch: empty,
+      afterPatch: empty,
+      verified: false,
+      skipped: true,
       skipReason: 'LLM exploit generation failed or timed out',
     }
   }
 
   const exploitCode = raw.code
-  const exploitLang = (raw.lang === 'python' ? 'python' : raw.lang === 'bash' ? 'bash' : 'javascript') as ExploitLang
+  const exploitLang: ExploitLang =
+    raw.lang === 'python' || raw.lang === 'bash' ? raw.lang : 'javascript'
 
-  // 4. Run exploit BEFORE patch
   onProgress(`Running exploit (before patch)…`)
   const beforePatch = await runExploit(exploitCode, exploitLang, projectRoot)
 
   if (dryRun) {
     return {
-      findingId: finding.id, exploitCode, exploitLang,
-      beforePatch, afterPatch: empty,
-      verified: false, skipped: false,
+      findingId: finding.id,
+      exploitCode,
+      exploitLang,
+      beforePatch,
+      afterPatch: empty,
+      verified: false,
+      skipped: true,
+      skipReason: 'dry run',
     }
   }
 
-  // 5. Apply fix silently
   onProgress(`Applying patch…`)
   const fixed = await applyFixSilently(finding, projectRoot, llm)
   if (!fixed) {
     return {
-      findingId: finding.id, exploitCode, exploitLang,
-      beforePatch, afterPatch: empty,
-      verified: false, skipped: true,
+      findingId: finding.id,
+      exploitCode,
+      exploitLang,
+      beforePatch,
+      afterPatch: empty,
+      verified: false,
+      skipped: true,
       skipReason: 'LLM could not synthesize a patch',
     }
   }
 
-  // 6. Re-run the SAME exploit AFTER patch
   onProgress(`Re-running exploit (after patch)…`)
   const afterPatch = await runExploit(exploitCode, exploitLang, projectRoot)
 
-  // 7. Verified = exploited before AND NOT exploited after
+  // exploit fired before patch and failed after = vuln is closed
   const verified = beforePatch.success && !afterPatch.success
 
   return {
-    findingId: finding.id, exploitCode, exploitLang,
-    beforePatch, afterPatch, verified, skipped: false,
+    findingId: finding.id,
+    exploitCode,
+    exploitLang,
+    beforePatch,
+    afterPatch,
+    verified,
+    skipped: false,
   }
 }
