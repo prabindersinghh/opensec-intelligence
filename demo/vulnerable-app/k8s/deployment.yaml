@@ -1,0 +1,18 @@
+# Demo vulnerable app — intentionally insecure Kubernetes manifest.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: demo-api
+spec:
+  replicas: 2
+  template:
+    spec:
+      hostNetwork: true
+      containers:
+        - name: api
+          image: demo/api:latest
+          securityContext:
+            privileged: true
+          env:
+            - name: DB_PASSWORD
+              value: "prod-db-password-inline"
