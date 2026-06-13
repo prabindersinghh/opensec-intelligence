@@ -121,16 +121,187 @@ function extractInput(code: string): string {
   return m.length > 60 ? m.slice(0, 60) + '…' : m
 }
 
-// Task 4 will add: PROVABLE_VULN_CLASSES, SKIP_REASONS, buildExploitPrompt(), prove()
-// Placeholder exports to satisfy TypeScript until Task 4 is complete:
-export const PROVABLE_VULN_CLASSES = new Set<string>()
-export const SKIP_REASONS: Record<string, string> = {}
+// ---------------------------------------------------------------------------
+// Provable vulnerability classes
+// ---------------------------------------------------------------------------
+
+export const PROVABLE_VULN_CLASSES = new Set([
+  'Weak Hash Algorithm (MD5)',
+  'Weak Hash Algorithm (SHA-1)',
+  'Hardcoded Password Assignment',
+  'JWT Secret Hardcoded',
+  'Database URL with Credentials',
+  'eval() Usage',
+  'Insecure Random for Secret',
+  'AWS Access Key',
+  'Private Key Block',
+  'GitHub Token',
+  'Stripe Secret Key',
+  'Command Injection',
+  'SQL Injection — String Concat',
+  'SQL Injection — Template Literal',
+  'Path Traversal',
+  'CORS Wildcard',
+  'Hardcoded API Key',
+])
+
+export const SKIP_REASONS: Record<string, string> = {
+  'K8s: Privileged Container':      'requires live cluster — use kubesec for verification',
+  'K8s: Host Network':              'requires live cluster — flag for manual review',
+  'K8s: Secret in Plain Env':       'requires live cluster — flag for manual review',
+  'Docker: Running as Root':        'requires container runtime — flag for manual review',
+  'Docker: Latest Tag':             'image tag policy — flag for manual review',
+  'Docker: Hardcoded Secret in ENV':'requires container runtime — flag for manual review',
+  'Terraform: Public S3 Bucket':    'requires AWS credentials — flag for manual review',
+  'Terraform: Open Security Group': 'requires AWS credentials — flag for manual review',
+  'Prototype Pollution':            'requires runtime context — complex to auto-prove safely',
+  'Open Redirect':                  'requires live HTTP server — add to integration tests',
+  'Debug Mode Enabled':             'configuration check — flag for manual review',
+  'HTTP Endpoint (not HTTPS)':      'network policy check — flag for manual review',
+}
+
+// ---------------------------------------------------------------------------
+// LLM exploit generator
+// ---------------------------------------------------------------------------
+
+interface ExploitGenResponse {
+  lang: string
+  code: string
+  maliciousInput: string
+}
+
+function buildExploitPrompt(finding: Finding, fileContent: string): string {
+  return `You are a security researcher writing a minimal proof-of-concept exploit.
+
+VULNERABILITY:
+- Type: ${finding.ruleName}
+- File: ${finding.file}
+- Line: ${finding.line}
+- Severity: ${finding.severity}
+- Snippet: ${finding.snippet}
+
+FULL FILE CONTENT:
+${fileContent.slice(0, 3000)}
+
+TASK: Write the SMALLEST possible self-contained script that:
+1. Calls the vulnerable function/endpoint with a malicious input
+2. Prints "EXPLOITED: <what happened>" if the vuln exists
+3. Prints "NOT_EXPLOITED: <reason>" if it cannot trigger the vuln
+4. Exits normally
+
+CONSTRAINTS:
+- Maximum 30 lines of code
+- Must be runnable with: node exploit.js  OR  python3 exploit.py
+- Use relative require/import paths from the project root (e.g. require('./demo/prove-demo/auth'))
+- Use ONLY Node.js built-ins OR Python stdlib — NO external packages
+
+VULN-SPECIFIC GUIDANCE:
+- Weak Hash Algorithm (MD5): hash 'password', check result === '5f4dcc3b5aa765d61d8327deb882cf99'
+- Hardcoded Password Assignment: read file source and check literal password value is present
+- JWT Secret Hardcoded: read exported JWT_SECRET, confirm it is not from env
+- Database URL with Credentials: read exported connection string, check it contains '@'
+- eval() Usage: call the function with 'EXPLOITED_TOKEN', check output contains it
+- Insecure Random for Secret: call function 5 times, check values are all different but < 24 hex chars
+- SQL Injection — String Concat / Template Literal: call with "' OR '1'='1", check rows.length > 0
+- Command Injection: call with "; echo EXPLOITED_CMD", check output contains EXPLOITED_CMD
+- CORS Wildcard: call setCorsHeaders, check returned header is '*'
+- Hardcoded API Key: read exported api key value, confirm it is a string literal
+
+OUTPUT FORMAT — respond ONLY with this JSON (no explanation, no markdown):
+{
+  "lang": "javascript",
+  "code": "<full exploit script with \\n newlines>",
+  "maliciousInput": "<the input used>"
+}`
+}
+
+// ---------------------------------------------------------------------------
+// Main prove() entry point
+// ---------------------------------------------------------------------------
+
 export async function prove(
-  _finding: Finding,
-  _projectRoot: string,
-  _llm: LlmConfig,
-  _onProgress: (msg: string) => void,
-  _dryRun?: boolean,
+  finding: Finding,
+  projectRoot: string,
+  llm: LlmConfig,
+  onProgress: (msg: string) => void,
+  dryRun = false,
 ): Promise<ProofResult> {
-  throw new Error('prove() not yet implemented — will be added in Task 4')
+  const empty: ExploitResult = { success: false, input: '', output: '', exitCode: 0, duration: 0 }
+
+  // 1. Check if this vuln class is auto-provable
+  if (!PROVABLE_VULN_CLASSES.has(finding.ruleName)) {
+    return {
+      findingId: finding.id,
+      exploitCode: '',
+      exploitLang: 'javascript',
+      beforePatch: empty,
+      afterPatch: empty,
+      verified: false,
+      skipped: true,
+      skipReason: SKIP_REASONS[finding.ruleName] ?? 'auto-proof not supported for this vuln class',
+    }
+  }
+
+  // 2. Read target file
+  let fileContent = ''
+  try {
+    fileContent = readFileSync(path.join(projectRoot, finding.file), 'utf8')
+  } catch {
+    return {
+      findingId: finding.id, exploitCode: '', exploitLang: 'javascript',
+      beforePatch: empty, afterPatch: empty, verified: false, skipped: true,
+      skipReason: `cannot read ${finding.file}`,
+    }
+  }
+
+  // 3. Generate exploit via LLM
+  onProgress(`Generating exploit for ${finding.ruleName}…`)
+  const raw = await generateJson<ExploitGenResponse>(llm, buildExploitPrompt(finding, fileContent), 2)
+
+  if (!raw?.code) {
+    return {
+      findingId: finding.id, exploitCode: '', exploitLang: 'javascript',
+      beforePatch: empty, afterPatch: empty, verified: false, skipped: true,
+      skipReason: 'LLM exploit generation failed or timed out',
+    }
+  }
+
+  const exploitCode = raw.code
+  const exploitLang = (raw.lang === 'python' ? 'python' : raw.lang === 'bash' ? 'bash' : 'javascript') as ExploitLang
+
+  // 4. Run exploit BEFORE patch
+  onProgress(`Running exploit (before patch)…`)
+  const beforePatch = await runExploit(exploitCode, exploitLang, projectRoot)
+
+  if (dryRun) {
+    return {
+      findingId: finding.id, exploitCode, exploitLang,
+      beforePatch, afterPatch: empty,
+      verified: false, skipped: false,
+    }
+  }
+
+  // 5. Apply fix silently
+  onProgress(`Applying patch…`)
+  const fixed = await applyFixSilently(finding, projectRoot, llm)
+  if (!fixed) {
+    return {
+      findingId: finding.id, exploitCode, exploitLang,
+      beforePatch, afterPatch: empty,
+      verified: false, skipped: true,
+      skipReason: 'LLM could not synthesize a patch',
+    }
+  }
+
+  // 6. Re-run the SAME exploit AFTER patch
+  onProgress(`Re-running exploit (after patch)…`)
+  const afterPatch = await runExploit(exploitCode, exploitLang, projectRoot)
+
+  // 7. Verified = exploited before AND NOT exploited after
+  const verified = beforePatch.success && !afterPatch.success
+
+  return {
+    findingId: finding.id, exploitCode, exploitLang,
+    beforePatch, afterPatch, verified, skipped: false,
+  }
 }
