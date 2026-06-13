@@ -1,12 +1,18 @@
 /**
  * Deterministic security detection patterns.
  *
- * These run with no LLM — pure regex over file contents — so the Scanner stays
- * fast and reproducible. The Analyst (LLM) is layered on top to confirm/triage.
+ * Each pattern carries a `confidence` (0–1) reflecting how reliably the regex
+ * alone identifies a real vulnerability without LLM confirmation.  High-
+ * confidence rules (≥ 0.85) have very specific signatures; low-confidence rules
+ * (< 0.65) need the Analyst to filter noise.
  *
- * Lines that contain the marker `opensec-ignore` are skipped by the Scanner,
- * which is how this file avoids matching its own rule literals when OpenSec
- * scans its own source.
+ * `skipInTestFiles` is true by default: findings in test/spec/fixture files are
+ * suppressed for noisy rules.  Set it to false for secrets — a credential in a
+ * test file is still a credential.
+ *
+ * IMPORTANT: this file is excluded from self-scanning (see scanner.ts
+ * SKIP_REL_PATHS). Do NOT add `opensec-ignore` markers — they are not needed
+ * here and create misleading documentation.
  */
 
 import type { SecurityPattern } from './types.js'
@@ -14,215 +20,337 @@ import type { SecurityPattern } from './types.js'
 export const SECRET_PATTERNS: SecurityPattern[] = [
   {
     name: 'AWS Access Key',
-    regex: /AKIA[0-9A-Z]{16}/, // opensec-ignore
+    regex: /AKIA[0-9A-Z]{16}/,
     severity: 'CRITICAL',
+    confidence: 0.95,
+    skipInTestFiles: false,
     category: 'secret',
     description: 'A hardcoded AWS access key ID was found in source.',
     remediation: 'Revoke the key in IAM immediately and load credentials from environment variables or a secrets manager.',
   },
   {
     name: 'AWS Secret Key',
-    regex: /aws_secret_access_key\s*=\s*[^\s]{20,}/i, // opensec-ignore
+    regex: /aws_secret_access_key\s*[=:]\s*["']?[A-Za-z0-9/+=]{40}["']?/i,
     severity: 'CRITICAL',
+    confidence: 0.95,
+    skipInTestFiles: false,
     category: 'secret',
     description: 'A hardcoded AWS secret access key was found.',
     remediation: 'Rotate the secret immediately and inject it via environment variables or a secrets manager.',
   },
   {
-    name: 'Private Key',
-    regex: /-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/, // opensec-ignore
+    name: 'Private Key Block',
+    regex: /-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----/,
     severity: 'CRITICAL',
+    confidence: 0.99,
+    skipInTestFiles: false,
     category: 'secret',
     description: 'A PEM-encoded private key is committed to the repository.',
     remediation: 'Remove the key from history (git filter-repo), rotate it, and store keys outside the repo.',
   },
   {
     name: 'GitHub Token',
-    regex: /ghp_[a-zA-Z0-9]{36}/, // opensec-ignore
+    regex: /ghp_[a-zA-Z0-9]{36}|github_pat_[a-zA-Z0-9_]{82}/,
     severity: 'CRITICAL',
+    confidence: 0.98,
+    skipInTestFiles: false,
     category: 'secret',
     description: 'A GitHub personal access token is hardcoded.',
     remediation: 'Revoke the token in GitHub settings and use repository or environment secrets instead.',
   },
   {
-    name: 'Hardcoded Password',
-    regex: /password\s*[=:]\s*["'][^"']{6,}["']/i, // opensec-ignore
+    name: 'Stripe Secret Key',
+    regex: /sk_live_[a-zA-Z0-9]{24,}/,
+    severity: 'CRITICAL',
+    confidence: 0.99,
+    skipInTestFiles: false,
+    category: 'secret',
+    description: 'A Stripe live secret key is hardcoded.',
+    remediation: 'Revoke the key in the Stripe dashboard and load it from environment variables.',
+  },
+  {
+    name: 'Slack Token',
+    regex: /xox[baprs]-[0-9]{10,13}-[0-9]{10,13}-[a-zA-Z0-9]{24,}/,
     severity: 'HIGH',
+    confidence: 0.97,
+    skipInTestFiles: false,
+    category: 'secret',
+    description: 'A Slack API token is hardcoded.',
+    remediation: 'Revoke the token in the Slack admin console and load it from a secret store.',
+  },
+  {
+    name: 'Database URL with Credentials',
+    regex: /(?:postgres|mysql|mongodb|redis):\/\/[^:@\s"']+:[^@\s"']+@[^\s"']+/,
+    severity: 'CRITICAL',
+    confidence: 0.90,
+    skipInTestFiles: false,
+    category: 'secret',
+    description: 'A database connection string embeds inline username:password credentials.',
+    remediation: 'Use a credential-less DSN and supply username/password via environment variables.',
+  },
+  {
+    name: 'JWT Secret Hardcoded',
+    regex: /jwt[_-]?secret\s*[=:]\s*["'][^"']{8,}["']/i,
+    severity: 'HIGH',
+    confidence: 0.75,
+    skipInTestFiles: true,
+    category: 'secret',
+    description: 'A JWT signing secret is hardcoded as a string literal.',
+    remediation: 'Store the signing secret in an environment variable; rotate any exposed secret.',
+  },
+  {
+    name: 'Hardcoded Password Assignment',
+    // Match password = "literal" but NOT password = process.env.X or password = getPassword()
+    regex: /(?:password|passwd|pwd)\s*[=:]\s*["'][^"'\s]{6,}["']/i,
+    severity: 'HIGH',
+    confidence: 0.65,
+    skipInTestFiles: true,
     category: 'secret',
     description: 'A password appears to be hardcoded as a string literal.',
     remediation: 'Move the password to an environment variable or secrets manager; never commit credentials.',
   },
   {
     name: 'Hardcoded API Key',
-    regex: /api[_-]?key\s*[=:]\s*["'][^"']{10,}["']/i, // opensec-ignore
+    regex: /api[_-]?key\s*[=:]\s*["'][^"']{10,}["']/i,
     severity: 'HIGH',
+    confidence: 0.70,
+    skipInTestFiles: true,
     category: 'secret',
     description: 'An API key appears to be hardcoded as a string literal.',
     remediation: 'Load the API key from configuration/environment at runtime instead of committing it.',
-  },
-  {
-    name: 'JWT Secret',
-    regex: /jwt[_-]?secret\s*[=:]\s*["'][^"']{8,}["']/i, // opensec-ignore
-    severity: 'HIGH',
-    category: 'secret',
-    description: 'A JWT signing secret is hardcoded.',
-    remediation: 'Store the signing secret in an environment variable; rotate any exposed secret.',
-  },
-  {
-    name: 'Database URL with credentials',
-    regex: /(?:postgres|mysql|mongodb):\/\/[^:\s]+:[^@\s]+@/, // opensec-ignore
-    severity: 'HIGH',
-    category: 'secret',
-    description: 'A database connection string embeds inline username:password credentials.',
-    remediation: 'Use a credential-less DSN and supply username/password via environment variables.',
-  },
-  {
-    name: 'Slack Token',
-    regex: /xox[baprs]-[0-9a-zA-Z-]{10,}/, // opensec-ignore
-    severity: 'HIGH',
-    category: 'secret',
-    description: 'A Slack API token is hardcoded.',
-    remediation: 'Revoke the token in the Slack admin console and load it from a secret store.',
-  },
-  {
-    name: 'Generic Secret',
-    regex: /secret\s*[=:]\s*["'][^"']{8,}["']/i, // opensec-ignore
-    severity: 'MEDIUM',
-    category: 'secret',
-    description: 'A value named "secret" is assigned a hardcoded string literal.',
-    remediation: 'Confirm this is not sensitive; if it is, move it to environment/secret storage.',
   },
 ]
 
 export const CODE_PATTERNS: SecurityPattern[] = [
   {
-    name: 'SQL Injection Risk',
-    regex: /(?:query|execute|exec)\s*\(\s*[`"'].*\$\{|f["'].*SELECT.*\{/i, // opensec-ignore
-    severity: 'HIGH',
+    name: 'Command Injection',
+    // exec/execSync with a template literal or string concatenation containing a variable
+    regex: /(?:exec|execSync)\s*\(\s*[`].*\$\{|(?:exec|execSync)\s*\([^)]*\+\s*\w/,
+    severity: 'CRITICAL',
+    confidence: 0.75,
+    skipInTestFiles: true,
     category: 'code',
-    description: 'A SQL statement is built with string interpolation, allowing injection.',
+    description: 'A shell command is constructed from interpolated input, allowing command injection.',
+    remediation: 'Use execFile/spawn with an argument array instead of building a shell string.',
+  },
+  {
+    name: 'SQL Injection — Template Literal',
+    // Any template literal with interpolation inside a query/execute/raw call
+    regex: /(?:query|execute|raw)\s*\(\s*`[^`]*\$\{[^}]+\}[^`]*`/i,
+    severity: 'HIGH',
+    confidence: 0.80,
+    skipInTestFiles: true,
+    category: 'code',
+    description: 'A SQL statement is built with template literal interpolation, allowing injection.',
     remediation: 'Use parameterized queries / prepared statements instead of string interpolation.',
   },
   {
-    name: 'Command Injection',
-    regex: /(?:exec|spawn|system|popen)\s*\([^)]*\$(?:\{[^}]+\}|[a-zA-Z_]\w*)/, // opensec-ignore
-    severity: 'CRITICAL',
+    name: 'SQL Injection — String Concat',
+    regex: /(?:query|execute|raw)\s*\(\s*["'][^"']*["']\s*\+\s*\w+|["']\s*\+\s*\w+\s*\+\s*["'][^"']*(?:SELECT|INSERT|UPDATE|DELETE|WHERE)/i,
+    severity: 'HIGH',
+    confidence: 0.78,
+    skipInTestFiles: true,
     category: 'code',
-    description: 'A shell command is constructed from interpolated input, allowing command injection.',
-    remediation: 'Avoid shells; pass arguments as an array to execFile/spawn and validate/escape all input.',
+    description: 'A SQL statement is built with string concatenation, allowing injection.',
+    remediation: 'Use parameterized queries / prepared statements.',
   },
   {
-    name: 'Eval Usage',
-    regex: /\beval\s*\(/, // opensec-ignore
+    name: 'eval() Usage',
+    regex: /\beval\s*\([^)]{0,100}\)/,
     severity: 'HIGH',
+    confidence: 0.80,
+    skipInTestFiles: true,
     category: 'code',
-    description: 'Use of eval() can execute arbitrary code from untrusted input.',
+    description: 'eval() can execute arbitrary code if its argument includes untrusted input.',
     remediation: 'Remove eval(); use JSON.parse, a safe expression parser, or explicit dispatch.',
   },
   {
-    name: 'Debug Mode in Prod',
-    regex: /DEBUG\s*=\s*True|debug\s*:\s*true/, // opensec-ignore
-    severity: 'MEDIUM',
-    category: 'code',
-    description: 'Debug mode appears to be enabled, which can leak stack traces and internals.',
-    remediation: 'Drive debug flags from environment and ensure production runs with debug disabled.',
-  },
-  {
-    name: 'HTTP not HTTPS',
-    // Excludes localhost and well-known non-fetchable XML/schema namespace hosts.
-    regex: /http:\/\/(?!localhost|127\.0\.0\.1|0\.0\.0\.0|www\.w3\.org|schemas\.|[^/\s]*\.local)/, // opensec-ignore
-    severity: 'MEDIUM',
-    category: 'code',
-    description: 'A plaintext (non-TLS) URL to a non-local host was found.',
-    remediation: 'Use TLS for all external endpoints to prevent eavesdropping and tampering.',
-  },
-  {
     name: 'CORS Wildcard',
-    regex: /Access-Control-Allow-Origin['":\s]+\*/, // opensec-ignore
+    regex: /Access-Control-Allow-Origin['":\s,]+\*|cors\s*\(\s*\{[^}]*origin\s*:\s*['"]?\*/,
     severity: 'HIGH',
+    confidence: 0.85,
+    skipInTestFiles: true,
     category: 'code',
-    description: 'CORS is configured to allow any origin (*), exposing the API to any site.',
+    description: 'CORS is configured to allow any origin (*), exposing the API to any website.',
     remediation: 'Restrict Access-Control-Allow-Origin to an explicit allowlist of trusted origins.',
   },
   {
-    name: 'Weak Crypto',
-    regex: /\b(?:md5|sha1|DES|RC4)\b/i, // opensec-ignore
+    name: 'Weak Hash Algorithm (MD5)',
+    regex: /createHash\s*\(\s*['"]md5['"]\)|(?<!\w)md5\s*\(/,
     severity: 'HIGH',
+    confidence: 0.85,
+    skipInTestFiles: true,
     category: 'code',
-    description: 'A weak or broken cryptographic primitive is referenced.',
-    remediation: 'Use SHA-256+/bcrypt/argon2 for hashing and AES-GCM for encryption.',
+    description: 'MD5 is a broken hash algorithm; collisions are trivially produced.',
+    remediation: 'Use SHA-256+ for checksums, or bcrypt/argon2 for password hashing.',
   },
   {
-    name: 'Insecure Random',
-    regex: /Math\.random\(\)|random\.random\(\)/, // opensec-ignore
+    name: 'Weak Hash Algorithm (SHA-1)',
+    regex: /createHash\s*\(\s*['"]sha1['"]\)/,
     severity: 'MEDIUM',
+    confidence: 0.80,
+    skipInTestFiles: true,
     category: 'code',
-    description: 'A non-cryptographic RNG is used; unsafe for tokens, IDs, or secrets.',
-    remediation: 'Use crypto.randomBytes / secrets module for any security-sensitive randomness.',
+    description: 'SHA-1 is deprecated for security use; collision attacks exist.',
+    remediation: 'Use SHA-256 or higher for any security-relevant hashing.',
+  },
+  {
+    name: 'Insecure Random for Secret',
+    // Only flag Math.random() when the result is assigned to a security-sensitive name
+    regex: /(?:token|secret|nonce|csrf|session(?:Id|Token|Key)|password|key|salt)\s*[=:]\s*(?:[^;]*?)Math\.random\s*\(\)/,
+    severity: 'HIGH',
+    confidence: 0.85,
+    skipInTestFiles: true,
+    category: 'code',
+    description: 'Math.random() is assigned to a security-sensitive variable and is not cryptographically secure.',
+    remediation: 'Use crypto.randomBytes(32).toString("hex") for tokens, nonces, and secrets.',
   },
   {
     name: 'Open Redirect',
-    regex: /redirect\s*\(.*(?:req\.|request\.|params\.)/, // opensec-ignore
+    regex: /res\.redirect\s*\([^)]*(?:req\.|request\.|params\.|query\.)[^)]*\)/,
     severity: 'HIGH',
+    confidence: 0.82,
+    skipInTestFiles: true,
     category: 'code',
     description: 'A redirect target is derived from request input, enabling open redirects.',
     remediation: 'Validate redirect targets against an allowlist of internal paths.',
   },
   {
-    name: 'XXE Risk',
-    regex: /XMLParser|etree\.parse|DOMParser/, // opensec-ignore
-    severity: 'MEDIUM',
+    name: 'Path Traversal',
+    regex: /(?:readFile|readFileSync|createReadStream|open)\s*\([^)]*(?:req\.|request\.|params\.|query\.)\w+[^)]*\)/,
+    severity: 'HIGH',
+    confidence: 0.72,
+    skipInTestFiles: true,
     category: 'code',
-    description: 'XML parsing without disabling external entities can allow XXE.',
-    remediation: 'Disable DTD/external-entity resolution in the XML parser configuration.',
+    description: 'A file path is derived from request input, enabling path traversal attacks.',
+    remediation: 'Resolve the path with path.resolve(), then verify it stays within the intended root.',
+  },
+  {
+    name: 'Prototype Pollution',
+    regex: /\[['"]__proto__['"]\]|Object\.assign\s*\(\s*\w+\s*,\s*(?:req|request|body|params)\b/,
+    severity: 'HIGH',
+    confidence: 0.82,
+    skipInTestFiles: true,
+    category: 'code',
+    description: 'Merging untrusted input into objects can pollute the Object prototype.',
+    remediation: 'Use Object.create(null) as merge target, or validate input keys against an allowlist.',
+  },
+  {
+    name: 'Debug Mode Enabled',
+    regex: /DEBUG\s*=\s*True|(?:app|server)\.(?:set)\s*\(\s*['"]debug['"]\s*,\s*true\s*\)/,
+    severity: 'MEDIUM',
+    confidence: 0.78,
+    skipInTestFiles: true,
+    category: 'code',
+    description: 'Debug mode is explicitly enabled, which can expose stack traces and internals.',
+    remediation: 'Drive debug flags from environment variables; ensure production runs with debug disabled.',
+  },
+  {
+    name: 'HTTP Endpoint (not HTTPS)',
+    // Only flag URLs that look like actual fetch targets (in string assignment or function arg)
+    // Exclude: localhost, 127.x, schema namespaces, console.log strings, comments
+    regex: /(?:=|fetch|axios\.get|axios\.post|got|request)\s*\(\s*['"]http:\/\/(?!localhost|127\.|0\.0\.0\.0|::1|www\.w3\.org|schemas\.)[a-zA-Z0-9]/,
+    severity: 'MEDIUM',
+    confidence: 0.65,
+    skipInTestFiles: true,
+    category: 'code',
+    description: 'A plaintext http:// URL is used for a network request to a non-local host.',
+    remediation: 'Use https:// for all external endpoints to prevent eavesdropping and tampering.',
   },
 ]
 
 export const INFRA_PATTERNS: SecurityPattern[] = [
   {
-    name: 'Root Container',
-    regex: /USER root|user:\s*root/, // opensec-ignore
+    name: 'Docker: Running as Root',
+    regex: /^USER\s+root\s*$/m,
     severity: 'HIGH',
+    confidence: 0.92,
+    skipInTestFiles: false,
     category: 'infra',
-    description: 'A container is configured to run as the root user.',
-    remediation: 'Add a non-root USER directive and run the workload with least privilege.',
-    files: ['Dockerfile', 'docker-compose.yml', '*.yaml', '*.yml'],
+    description: 'The Dockerfile runs the workload as root, violating least-privilege.',
+    remediation: 'Add a non-root USER directive before CMD/ENTRYPOINT.',
+    files: ['Dockerfile'],
+    multiline: true,
   },
   {
-    name: 'Privileged Container',
-    regex: /privileged:\s*true/, // opensec-ignore
-    severity: 'CRITICAL',
-    category: 'infra',
-    description: 'A container requests privileged mode, granting host-level access.',
-    remediation: 'Remove privileged:true; grant only the specific capabilities required.',
-    files: ['*.yaml', '*.yml', 'docker-compose.yml'],
-  },
-  {
-    name: 'Host Network',
-    regex: /network_mode:\s*host|hostNetwork:\s*true/, // opensec-ignore
-    severity: 'HIGH',
-    category: 'infra',
-    description: 'The container shares the host network namespace, bypassing isolation.',
-    remediation: 'Use bridge/pod networking and expose only the ports you need.',
-    files: ['*.yaml', '*.yml', 'docker-compose.yml'],
-  },
-  {
-    name: 'Latest Tag',
-    regex: /FROM\s+\S+:latest/, // opensec-ignore
+    name: 'Docker: Latest Tag',
+    regex: /^FROM\s+\S+:latest\s*(?:#.*)?$/m,
     severity: 'MEDIUM',
+    confidence: 0.92,
+    skipInTestFiles: false,
     category: 'infra',
     description: 'A base image is pinned to the mutable :latest tag.',
     remediation: 'Pin base images to a specific version or digest for reproducible, auditable builds.',
     files: ['Dockerfile'],
+    multiline: true,
   },
   {
-    name: 'Exposed Secret in Env',
-    regex: /(?:SECRET|PASSWORD|API_?KEY|TOKEN)\s*[:=]\s*["']?[^\s"']{6,}/, // opensec-ignore
+    name: 'Docker: Hardcoded Secret in ENV',
+    regex: /^ENV\s+(?:\w*(?:PASSWORD|SECRET|KEY|TOKEN|API_KEY)\w*)\s*=/m,
     severity: 'HIGH',
+    confidence: 0.90,
+    skipInTestFiles: false,
     category: 'infra',
-    description: 'A secret-like environment value is defined inline in an infra file.',
-    remediation: 'Reference secrets from a vault/secret manager rather than inlining them.',
-    files: ['*.yaml', '*.yml', 'docker-compose.yml', 'Dockerfile'],
+    description: 'A secret-like environment variable is hardcoded in the Dockerfile.',
+    remediation: 'Use --build-arg or Docker secrets instead of baking credentials into ENV instructions.',
+    files: ['Dockerfile'],
+    multiline: true,
+  },
+  {
+    name: 'K8s: Privileged Container',
+    regex: /privileged:\s*true/,
+    severity: 'CRITICAL',
+    confidence: 0.95,
+    skipInTestFiles: false,
+    category: 'infra',
+    description: 'A container requests privileged mode, granting full host access.',
+    remediation: 'Remove privileged:true; grant only the specific capabilities required.',
+    files: ['.yaml', '.yml'],
+  },
+  {
+    name: 'K8s: Host Network',
+    regex: /hostNetwork:\s*true/,
+    severity: 'HIGH',
+    confidence: 0.95,
+    skipInTestFiles: false,
+    category: 'infra',
+    description: 'The pod shares the host network namespace, bypassing network isolation.',
+    remediation: 'Use a pod-level network policy instead of hostNetwork.',
+    files: ['.yaml', '.yml'],
+  },
+  {
+    name: 'K8s: Secret in Plain Env',
+    regex: /name:\s*['"]?(?:\w*(?:SECRET|PASSWORD|KEY|TOKEN)\w*)['"]?\s*\n\s*value:\s*\S+/,
+    severity: 'HIGH',
+    confidence: 0.88,
+    skipInTestFiles: false,
+    category: 'infra',
+    description: 'A Kubernetes env var with a secret-like name has a plaintext value.',
+    remediation: 'Reference a Secret resource via secretKeyRef instead of inlining the value.',
+    files: ['.yaml', '.yml'],
+    multiline: true,
+  },
+  {
+    name: 'Terraform: Public S3 Bucket',
+    regex: /acl\s*=\s*["']public-read/,
+    severity: 'HIGH',
+    confidence: 0.92,
+    skipInTestFiles: false,
+    category: 'infra',
+    description: 'An S3 bucket is configured for public read access.',
+    remediation: 'Remove the public ACL and use bucket policies with least-privilege access.',
+    files: ['.tf'],
+  },
+  {
+    name: 'Terraform: Open Security Group',
+    regex: /cidr_blocks\s*=\s*\["0\.0\.0\.0\/0"\]/,
+    severity: 'HIGH',
+    confidence: 0.90,
+    skipInTestFiles: false,
+    category: 'infra',
+    description: 'A security group allows inbound traffic from any IP (0.0.0.0/0).',
+    remediation: 'Restrict cidr_blocks to the specific IP ranges that need access.',
+    files: ['.tf'],
   },
 ]
 

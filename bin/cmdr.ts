@@ -241,9 +241,9 @@ async function main(): Promise<void> {
   // These run the deterministic engine and do NOT require Ollama to be running
   // (the LLM stages are layered on top and degrade gracefully when offline).
   // ---------------------------------------------------------------------------
-  if (args.scanPath !== undefined || args.fix || args.report) {
+  if (args.scanPath !== undefined || args.fix || args.report || args.validateLlm) {
     const { resolve } = await import('path')
-    const { securityScan, securityFix, securityReport, securityDemo } = await import('../src/security/cli.js')
+    const { securityScan, securityFix, securityReport, securityDemo, validateLlmPipeline } = await import('../src/security/cli.js')
     const secModel = args.model ?? process.env.OPENSEC_MODEL ?? process.env.CMDR_MODEL ?? 'qwen2.5-coder:14b'
 
     // --cloud hint (cloud analyst/consensus would need a provider key).
@@ -252,6 +252,9 @@ async function main(): Promise<void> {
     }
 
     try {
+      if (args.validateLlm) {
+        process.exit(await validateLlmPipeline({ model: secModel, ollamaUrl }))
+      }
       if (args.scanDemo) {
         process.exit(await securityDemo({ version: VERSION, model: secModel, ollamaUrl }))
       }

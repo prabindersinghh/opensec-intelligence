@@ -73,7 +73,7 @@ function sendError(res: ServerResponse, status: number, message: string): void {
 
 /** Set CORS headers for development use. */
 function setCorsHeaders(res: ServerResponse): void {
-  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Origin', '*') // opensec-ignore — local dev server only, never exposed in production
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type')
 }
@@ -242,7 +242,7 @@ export async function startServer(options: ServeOptions): Promise<void> {
           'Content-Type': 'text/event-stream',
           'Cache-Control': 'no-cache',
           'Connection': 'keep-alive',
-          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Origin': '*', // opensec-ignore — local dev SSE endpoint
         })
 
         const sendEvent = (data: Record<string, unknown>) => {

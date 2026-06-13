@@ -26,7 +26,11 @@ export interface SecurityPattern {
   category: Category
   description: string
   remediation: string
-  /** Restrict to matching file basenames/globs (e.g. ['Dockerfile', '*.yaml']). */
+  /** Base confidence that regex alone (without LLM) correctly identifies a vuln. 0.0–1.0. */
+  confidence: number
+  /** Skip matches in test/spec/fixture files. Default true. Only false for secrets that are real even in tests. */
+  skipInTestFiles?: boolean
+  /** Restrict to matching file extensions or exact basenames (e.g. ['.yaml', 'Dockerfile']). */
   files?: string[]
   /** Match against the whole file instead of line-by-line (for multi-line regexes). */
   multiline?: boolean

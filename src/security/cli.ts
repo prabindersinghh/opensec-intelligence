@@ -23,7 +23,7 @@ import {
   renderLatest,
   writeHtmlReport,
 } from './report.js'
-import { ollamaAvailable, type LlmConfig } from './llm.js'
+import { ollamaAvailable, checkOllama, generateJson, type LlmConfig } from './llm.js'
 import { tally, type Finding } from './types.js'
 
 const PINK = chalk.hex('#FF2D78')
@@ -207,6 +207,69 @@ export async function securityDemo(opts: { version: string; model: string; ollam
 
   await fs.rm(work, { recursive: true, force: true }).catch(() => {})
   return 0
+}
+
+// ---------------------------------------------------------------------------
+// --validate-llm — end-to-end smoke test of the Ollama pipeline
+// ---------------------------------------------------------------------------
+
+interface SmokeCase {
+  label: string
+  prompt: string
+  expectKey: string
+}
+
+const SMOKE_CASES: SmokeCase[] = [
+  {
+    label: 'JSON extraction',
+    prompt: 'Reply with exactly this JSON and nothing else: {"ok":true,"score":1}',
+    expectKey: 'ok',
+  },
+  {
+    label: 'Security classification',
+    prompt:
+      'A developer embedded a plaintext credential directly in source code (a classic hardcoded secret). ' +
+      'Reply with JSON: {"confirmed":true,"confidence":0.9,"attackVector":"credential theft"}',
+    expectKey: 'confirmed',
+  },
+  {
+    label: 'False positive discrimination',
+    prompt:
+      'Code: const hash = crypto.createHash("sha256"). ' +
+      'Is this a weak-hash vulnerability? Reply with JSON: {"confirmed":false,"confidence":0.95,"falsePositiveReason":"sha256 is secure"}',
+    expectKey: 'falsePositiveReason',
+  },
+]
+
+export async function validateLlmPipeline(opts: { model: string; ollamaUrl?: string }): Promise<number> {
+  const status = await checkOllama(opts.ollamaUrl)
+  if (!status.available) {
+    console.log(renderError('Ollama is not reachable. Start it with: ollama serve'))
+    return 1
+  }
+  const model = opts.model || status.model || 'llama3.2:3b'
+  const llm: LlmConfig = { baseUrl: opts.ollamaUrl, model }
+  console.log(`\n  ${chalk.bold('LLM VALIDATION')}  model: ${GREEN(model)}\n`)
+
+  let passed = 0
+  for (const c of SMOKE_CASES) {
+    process.stdout.write(`  ${DIM('·')} ${c.label} … `)
+    const result = await generateJson<Record<string, unknown>>(llm, c.prompt)
+    if (result && Object.prototype.hasOwnProperty.call(result, c.expectKey)) {
+      console.log(GREEN('✓ pass'))
+      passed++
+    } else {
+      console.log(chalk.red('✗ fail') + DIM(`  (got: ${JSON.stringify(result ?? null).slice(0, 80)})`))
+    }
+  }
+
+  const all = SMOKE_CASES.length
+  console.log(
+    `\n  ${passed === all ? GREEN('✓') : chalk.red('✗')} ${passed}/${all} smoke tests passed` +
+      (passed < all ? `\n  ${DIM('Tip: try a larger model with')} opensec -m qwen2.5-coder:14b --validate-llm` : '') +
+      '\n',
+  )
+  return passed === all ? 0 : 1
 }
 
 function renderError(msg: string): string {

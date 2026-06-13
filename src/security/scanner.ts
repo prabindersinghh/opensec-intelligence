@@ -1,9 +1,9 @@
 /**
- * Scanner — Phase 1A.
+ * Scanner — deterministic regex-based security scan.
  *
- * Walks a target directory, reads source/config/secret/infra files, and runs
- * the deterministic pattern set over them. No LLM involved: fast and
- * reproducible. Produces structured findings and writes `.opensec/last-scan.json`.
+ * Walks a target directory, reads source/config/infra files, and runs the
+ * pattern set.  No LLM: fast and reproducible.  Produces structured findings
+ * and writes `.opensec/last-scan.json`.
  */
 
 import { promises as fs } from 'fs'
@@ -20,6 +20,23 @@ const IGNORE_DIRS = new Set([
   '.venv', 'venv', '.idea', '.vscode',
 ])
 
+/**
+ * Relative paths (forward-slash, from scan root) that are excluded from
+ * self-scanning.  Prevents patterns.ts regexes matching their own source text,
+ * and avoids noise from evaluation / documentation files.
+ */
+const SKIP_REL_PREFIXES: string[] = [
+  'src/security/patterns.ts',
+  'evals/',
+  'eval/',
+  'docs/',
+  'README',
+  'AUDIT',
+  'BENCHMARK',
+  'CHANGELOG',
+  '_fp_audit',
+]
+
 /** File extensions and exact names we scan. */
 const SCAN_EXTENSIONS = new Set([
   '.py', '.js', '.jsx', '.ts', '.tsx', '.go', '.rb', '.java', '.php',
@@ -32,45 +49,80 @@ const SCAN_NAMES = new Set([
   '.gitlab-ci.yml', 'Jenkinsfile',
 ])
 
-/** Files that are noisy/derived and produce false positives. */
+/** Lock files — large, noisy, no real findings. */
 const IGNORE_NAMES = new Set([
   'package-lock.json', 'yarn.lock', 'pnpm-lock.yaml', 'composer.lock',
   'poetry.lock', 'Cargo.lock',
 ])
 
-const MAX_FILE_BYTES = 1_000_000 // skip files > 1MB (likely generated/binary)
+const MAX_FILE_BYTES = 1_000_000
 const SNIPPET_MAX = 200
 
 export interface ScannerOptions {
-  /** Absolute path of the directory to scan. */
   targetPath: string
   version?: string
-  /** Persist `.opensec/last-scan.json`. Default true. */
   persist?: boolean
-  /** Optional callback fired as each finding is discovered (for live UI). */
   onFinding?: (finding: Finding) => void
-  /** Optional callback fired as files are scanned (for progress). */
   onProgress?: (scanned: number, total: number) => void
 }
 
 function shouldScanFile(name: string): boolean {
   if (IGNORE_NAMES.has(name)) return false
   if (SCAN_NAMES.has(name)) return true
-  if (name.startsWith('.env')) return true // .env, .env.local, .env.production
-  const ext = path.extname(name)
-  return SCAN_EXTENSIONS.has(ext)
+  if (name.startsWith('.env')) return true
+  return SCAN_EXTENSIONS.has(path.extname(name))
 }
 
-/** Does this file's name match a pattern's `files` restriction? */
+/** True if the relative file path should be excluded from scanning entirely. */
+function isSkippedPath(relFile: string): boolean {
+  for (const prefix of SKIP_REL_PREFIXES) {
+    if (relFile === prefix || relFile.startsWith(prefix)) return true
+  }
+  return false
+}
+
+/** True when the file looks like a test / spec / fixture. */
+function isTestFile(relFile: string): boolean {
+  const lower = relFile.toLowerCase()
+  if (/\.(test|spec)\.[jt]sx?$/.test(lower)) return true
+  return (
+    lower.includes('/test/') ||
+    lower.includes('/tests/') ||
+    lower.includes('/__tests__/') ||
+    lower.includes('/spec/') ||
+    lower.includes('/fixtures/') ||
+    lower.includes('/mocks/') ||
+    lower.startsWith('test/') ||
+    lower.startsWith('tests/') ||
+    lower.startsWith('spec/')
+  )
+}
+
+/**
+ * True when a source line is a comment (not meaningful code).
+ * Covers the most common single-line comment forms.
+ */
+function isLineInComment(line: string): boolean {
+  const t = line.trimStart()
+  return (
+    t.startsWith('//') ||
+    t.startsWith('#') ||
+    t.startsWith('*') ||
+    t.startsWith('/*') ||
+    t.startsWith('<!--') ||
+    t.startsWith('--')
+  )
+}
+
+/** Does the file name/extension match a pattern's `files` restriction? */
 function fileMatchesScope(fileName: string, scope?: string[]): boolean {
   if (!scope || scope.length === 0) return true
-  return scope.some((glob) => {
-    if (glob.startsWith('*.')) return fileName.endsWith(glob.slice(1))
-    return fileName === glob
+  return scope.some((s) => {
+    if (s.startsWith('.')) return fileName.endsWith(s) || path.extname(fileName) === s
+    return fileName === s
   })
 }
 
-/** Recursively collect scannable files under a directory. */
 async function collectFiles(root: string): Promise<string[]> {
   const results: string[] = []
   async function walk(dir: string): Promise<void> {
@@ -96,31 +148,62 @@ async function collectFiles(root: string): Promise<string[]> {
 }
 
 function makeId(file: string, line: number, ruleName: string): string {
-  return createHash('sha1')
+  return createHash('sha1') // opensec-ignore — SHA-1 used only for a short deterministic ID, not cryptographic security
     .update(`${file}:${line}:${ruleName}`)
     .digest('hex')
     .slice(0, 12)
 }
 
 function trimSnippet(text: string): string {
-  const trimmed = text.trim()
-  return trimmed.length > SNIPPET_MAX ? `${trimmed.slice(0, SNIPPET_MAX)}…` : trimmed
+  const t = text.trim()
+  return t.length > SNIPPET_MAX ? `${t.slice(0, SNIPPET_MAX)}…` : t
 }
 
+/**
+ * Data-only extensions: JSON/YAML/TOML can hold secrets but not executable
+ * code, so CODE_PATTERNS (eval, SQL, CORS, etc.) are noise in these files.
+ */
+const DATA_EXTENSIONS = new Set(['.json', '.yaml', '.yml', '.toml'])
+
 /** Run every applicable pattern against one file's content. */
-function scanContent(relFile: string, fileName: string, content: string): Finding[] {
+function scanContent(
+  relFile: string,
+  fileName: string,
+  content: string,
+  testFile: boolean,
+): Finding[] {
   const findings: Finding[] = []
   const lines = content.split(/\r?\n/)
 
-  const applicable = ALL_PATTERNS.filter((p) => fileMatchesScope(fileName, p.files))
+  const isDataFile = DATA_EXTENSIONS.has(path.extname(fileName).toLowerCase())
+  const applicable = ALL_PATTERNS.filter((p) => {
+    if (!fileMatchesScope(fileName, p.files)) return false
+    // Skip code-execution patterns in JSON/YAML/TOML — they only produce noise.
+    if (isDataFile && p.category === 'code') return false
+    return true
+  })
   const lineBased = applicable.filter((p) => !p.multiline)
-  const multiline = applicable.filter((p) => p.multiline)
+  const multilinePats = applicable.filter((p) => p.multiline)
 
-  // Line-by-line patterns (most): gives precise line/column.
   for (let i = 0; i < lines.length; i++) {
     const lineText = lines[i]
-    if (lineText.includes('opensec-ignore')) continue
+
+    // Suppression markers on this line or the line immediately above it.
+    const prevLine = i > 0 ? lines[i - 1] : ''
+    if (
+      lineText.includes('opensec-ignore') ||
+      lineText.includes('nosec') ||
+      prevLine.includes('opensec-ignore') ||
+      prevLine.includes('nosec')
+    ) {
+      continue
+    }
+
+    // Skip pure comment lines — no real code to flag.
+    if (isLineInComment(lineText)) continue
+
     for (const pattern of lineBased) {
+      if (testFile && pattern.skipInTestFiles !== false) continue
       const m = pattern.regex.exec(lineText)
       if (m) {
         findings.push(buildFinding(relFile, i + 1, (m.index ?? 0) + 1, pattern, lineText))
@@ -128,14 +211,19 @@ function scanContent(relFile: string, fileName: string, content: string): Findin
     }
   }
 
-  // Whole-file patterns (multi-line regexes).
-  for (const pattern of multiline) {
+  for (const pattern of multilinePats) {
+    if (testFile && pattern.skipInTestFiles !== false) continue
     const m = pattern.regex.exec(content)
     if (m) {
       const before = content.slice(0, m.index)
       const lineNo = before.split(/\r?\n/).length
-      if (!lines[lineNo - 1]?.includes('opensec-ignore')) {
-        findings.push(buildFinding(relFile, lineNo, 1, pattern, lines[lineNo - 1] ?? m[0]))
+      const matchLine = lines[lineNo - 1] ?? m[0]
+      if (
+        !matchLine.includes('opensec-ignore') &&
+        !matchLine.includes('nosec') &&
+        !isLineInComment(matchLine)
+      ) {
+        findings.push(buildFinding(relFile, lineNo, 1, pattern, matchLine))
       }
     }
   }
@@ -161,6 +249,7 @@ function buildFinding(
     snippet: trimSnippet(snippet),
     description: pattern.description,
     remediation: pattern.remediation,
+    confidence: pattern.confidence,
   }
 }
 
@@ -172,6 +261,15 @@ export async function runScanner(opts: ScannerOptions): Promise<ScanResult> {
 
   let scanned = 0
   for (const absFile of files) {
+    const relFile = path.relative(targetPath, absFile).replace(/\\/g, '/')
+
+    // Hard-exclude certain paths (self-scan noise, docs, evals).
+    if (isSkippedPath(relFile)) {
+      scanned++
+      opts.onProgress?.(scanned, files.length)
+      continue
+    }
+
     let content: string
     try {
       const stat = await fs.stat(absFile)
@@ -187,9 +285,9 @@ export async function runScanner(opts: ScannerOptions): Promise<ScanResult> {
       continue
     }
 
-    const relFile = path.relative(targetPath, absFile).replace(/\\/g, '/')
     const fileName = path.basename(absFile)
-    for (const finding of scanContent(relFile, fileName, content)) {
+    const testFile = isTestFile(relFile)
+    for (const finding of scanContent(relFile, fileName, content, testFile)) {
       findings.push(finding)
       opts.onFinding?.(finding)
     }
@@ -219,7 +317,6 @@ export async function runScanner(opts: ScannerOptions): Promise<ScanResult> {
   return result
 }
 
-/** Write `.opensec/last-scan.json` under the target path. */
 export async function persistScan(targetPath: string, result: ScanResult): Promise<string> {
   const dir = path.join(targetPath, '.opensec')
   await fs.mkdir(dir, { recursive: true })
@@ -228,7 +325,6 @@ export async function persistScan(targetPath: string, result: ScanResult): Promi
   return file
 }
 
-/** Load a previously persisted scan (used by `fix` / `report`). */
 export async function loadLastScan(targetPath: string): Promise<ScanResult | null> {
   const file = path.join(targetPath, '.opensec', 'last-scan.json')
   try {

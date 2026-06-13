@@ -1,28 +1,56 @@
 /**
  * Minimal Ollama client for the security pipeline.
  *
- * Talks to /api/generate directly (per the pipeline spec) so the Analyst,
- * Consensus, and Fixer stages stay self-contained and degrade gracefully when
- * Ollama is offline — detection (Scanner) never depends on this.
+ * Talks to /api/generate directly so the Analyst, Consensus, and Fixer stages
+ * stay self-contained and degrade gracefully when Ollama is offline — the
+ * Scanner never depends on this module.
  */
 
 const DEFAULT_URL = 'http://localhost:11434'
+
+/** Ordered preference list for model auto-selection. */
+const PREFERRED_MODELS = [
+  'qwen2.5-coder:14b',
+  'qwen2.5-coder:7b',
+  'deepseek-r1:14b',
+  'deepseek-r1:7b',
+  'llama3.2:3b',
+  'llama3.1:8b',
+  'llama3:8b',
+]
 
 export interface LlmConfig {
   baseUrl?: string
   model: string
 }
 
-/** Is an Ollama server reachable? */
-export async function ollamaAvailable(baseUrl = DEFAULT_URL): Promise<boolean> {
+export interface OllamaStatus {
+  available: boolean
+  model: string | null
+}
+
+/**
+ * Check Ollama availability and pick the best available model.
+ * Returns `{ available: false, model: null }` when Ollama is unreachable.
+ */
+export async function checkOllama(baseUrl = DEFAULT_URL): Promise<OllamaStatus> {
   try {
     const res = await fetch(`${baseUrl.replace(/\/$/, '')}/api/tags`, {
       signal: AbortSignal.timeout(2000),
     })
-    return res.ok
+    if (!res.ok) return { available: false, model: null }
+    const data = (await res.json()) as { models?: { name: string }[] }
+    const names = (data.models ?? []).map((m) => m.name)
+    const model = PREFERRED_MODELS.find((p) => names.some((n) => n.startsWith(p))) ?? names[0] ?? null
+    return { available: true, model }
   } catch {
-    return false
+    return { available: false, model: null }
   }
+}
+
+/** Backward-compat: returns true when Ollama is reachable. */
+export async function ollamaAvailable(baseUrl = DEFAULT_URL): Promise<boolean> {
+  return (await checkOllama(baseUrl)).available
 }
 
 /** Single-shot completion via /api/generate. Returns the raw text. */
@@ -77,15 +105,26 @@ export function extractJson<T = unknown>(text: string): T | null {
   return null
 }
 
-/** Generate and parse JSON in one call; returns null on any failure. */
+/**
+ * Generate and parse JSON with up to `retries` attempts (exponential backoff).
+ * Returns null when all attempts fail or Ollama is unreachable.
+ */
 export async function generateJson<T = unknown>(
   config: LlmConfig,
   prompt: string,
+  retries = 3,
 ): Promise<T | null> {
-  try {
-    const text = await generate(config, prompt)
-    return extractJson<T>(text)
-  } catch {
-    return null
+  for (let attempt = 0; attempt < retries; attempt++) {
+    try {
+      const text = await generate(config, prompt)
+      const parsed = extractJson<T>(text)
+      if (parsed !== null) return parsed
+    } catch {
+      // swallow and retry
+    }
+    if (attempt < retries - 1) {
+      await new Promise((r) => setTimeout(r, 500 * 2 ** attempt))
+    }
   }
+  return null
 }

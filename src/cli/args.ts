@@ -41,8 +41,9 @@ export interface CliArgs {
   scanCloud?: boolean // --cloud: use cloud provider for analyst/consensus
   scanDemo?: boolean  // --demo: scan the bundled vulnerable app
   scanCi?: boolean    // --ci: JSON to stdout, exit 1 on CRITICAL
-  fix?: boolean       // 'fix' — run fixer on last scan results
-  report?: boolean    // 'report' — output HTML report of last findings
+  fix?: boolean          // 'fix' — run fixer on last scan results
+  report?: boolean       // 'report' — output HTML report of last findings
+  validateLlm?: boolean  // --validate-llm: smoke-test Ollama pipeline end-to-end
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -164,6 +165,9 @@ export function parseArgs(argv: string[]): CliArgs {
         break
       case '--browser':
         args.browser = true
+        break
+      case '--validate-llm':
+        args.validateLlm = true
         break
       default:
         // If no flag prefix, treat as inline prompt

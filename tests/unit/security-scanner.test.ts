@@ -19,7 +19,8 @@ beforeAll(async () => {
       'const id = req.query.id',
       'db.query(`SELECT * FROM users WHERE id = ${id}`)',
       "const h = crypto.createHash('md5')",
-      'const r = Math.random()',
+      // use a security-sensitive variable name so the scoped pattern fires
+      'const token = Math.random()',
     ].join('\n'),
     'utf8',
   )
@@ -28,7 +29,7 @@ beforeAll(async () => {
     ['FROM node:latest', 'USER root'].join('\n'),
     'utf8',
   )
-  // A line that must be ignored.
+  // A line that must be suppressed.
   await fs.writeFile(
     path.join(dir, 'safe.js'),
     "const apiKey = 'this-should-be-ignored-1234' // opensec-ignore\n",
@@ -44,12 +45,12 @@ describe('runScanner', () => {
   it('detects secret, code and infra findings deterministically', async () => {
     const result = await runScanner({ targetPath: dir, version: 't', persist: false })
     const rules = result.findings.map((f) => f.ruleName)
-    expect(rules).toContain('Hardcoded Password')
-    expect(rules).toContain('SQL Injection Risk')
-    expect(rules).toContain('Weak Crypto')
-    expect(rules).toContain('Insecure Random')
-    expect(rules).toContain('Latest Tag')
-    expect(rules).toContain('Root Container')
+    expect(rules).toContain('Hardcoded Password Assignment')
+    expect(rules).toContain('SQL Injection — Template Literal')
+    expect(rules).toContain('Weak Hash Algorithm (MD5)')
+    expect(rules).toContain('Insecure Random for Secret')
+    expect(rules).toContain('Docker: Latest Tag')
+    expect(rules).toContain('Docker: Running as Root')
   })
 
   it('respects opensec-ignore markers', async () => {
@@ -92,6 +93,31 @@ describe('runScanner', () => {
     const t = tally(result.findings)
     expect(t.CRITICAL + t.HIGH + t.MEDIUM + t.LOW).toBe(result.findings.length)
   })
+
+  it('excludes test files for noise-prone patterns', async () => {
+    // Write the same vuln inside a test file path.
+    await fs.mkdir(path.join(dir, 'tests'), { recursive: true })
+    await fs.writeFile(
+      path.join(dir, 'tests', 'auth.test.js'),
+      "const password = 'hunter2pass'\nconst token = Math.random()\n",
+      'utf8',
+    )
+    const result = await runScanner({ targetPath: dir, version: 't', persist: false })
+    const testFindings = result.findings.filter((f) => f.file.includes('tests/'))
+    // skipInTestFiles patterns should not fire in test files
+    expect(testFindings.filter((f) => f.ruleName === 'Hardcoded Password Assignment')).toHaveLength(0)
+    expect(testFindings.filter((f) => f.ruleName === 'Insecure Random for Secret')).toHaveLength(0)
+    await fs.rm(path.join(dir, 'tests'), { recursive: true, force: true })
+  })
+
+  it('includes findings with a confidence score', async () => {
+    const result = await runScanner({ targetPath: dir, version: 't', persist: false })
+    for (const f of result.findings) {
+      expect(typeof f.confidence).toBe('number')
+      expect(f.confidence).toBeGreaterThan(0)
+      expect(f.confidence).toBeLessThanOrEqual(1)
+    }
+  })
 })
 
 describe('extractJson', () => {
@@ -116,7 +142,7 @@ describe('diff rendering', () => {
     expect(diff.some((d) => d.type === 'removal')).toBe(true)
     expect(diff.some((d) => d.type === 'addition')).toBe(true)
     const html = renderDiffHtml(
-      { severity: 'HIGH', ruleName: 'Hardcoded Password', file: 'a.js', line: 2, description: 'x' } as never,
+      { severity: 'HIGH', ruleName: 'Hardcoded Password Assignment', file: 'a.js', line: 2, description: 'x' } as never,
       diff,
     )
     expect(html).toContain('<!DOCTYPE html>')
