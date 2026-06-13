@@ -207,3 +207,34 @@ async function commitFix(targetPath: string, finding: Finding): Promise<void> {
     console.log(chalk.gray('  (skipped git commit — not a repo or nothing to commit)'))
   }
 }
+
+/**
+ * Apply a fix for a single finding silently — no terminal output, no git commit.
+ * Used by the Prover after confirming a vulnerability.
+ * Returns true if a fix was successfully written to disk.
+ */
+export async function applyFixSilently(
+  finding: Finding,
+  projectRoot: string,
+  llm: LlmConfig,
+): Promise<boolean> {
+  const abs = path.join(projectRoot, finding.file)
+  let fileContent: string
+  try {
+    fileContent = await fs.readFile(abs, 'utf8')
+  } catch {
+    return false
+  }
+  const fileLines = fileContent.split(/\r?\n/)
+  const res = await generateJson<FixResponse>(llm, buildFixPrompt(finding))
+  if (!res || !Array.isArray(res.fixed_lines) || res.fixed_lines.length === 0) return false
+
+  const newLines = [
+    ...fileLines.slice(0, finding.line - 1),
+    ...res.fixed_lines,
+    ...fileLines.slice(finding.line),
+  ]
+  await fs.writeFile(abs, newLines.join('\n'), 'utf8')
+  finding.fixApplied = true
+  return true
+}
