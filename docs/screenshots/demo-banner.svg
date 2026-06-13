@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="520" height="172" viewBox="0 0 520 172" font-family="'SF Mono','Cascadia Code',Menlo,Consolas,monospace" font-size="13">
+  <rect width="520" height="172" rx="8" fill="#0d1117"/>
+  <text><tspan x="16.0" y="31" fill="#FF2D78">╔════════════════════════════════════════════════════════╗</tspan>
+<tspan x="16.0" y="51" fill="#FF2D78" font-weight="bold">║  🎯 DEMO COMPLETE                                      ║</tspan>
+<tspan x="16.0" y="71" fill="#FF2D78">║                                                        ║</tspan>
+<tspan x="16.0" y="91" fill="#c9d1d9">║  OpenSec found 17 vulnerabilities in 1s                ║</tspan>
+<tspan x="16.0" y="111" fill="#FF2D78">║                                                        ║</tspan>
+<tspan x="16.0" y="131" fill="#00FF94">║  Now scan YOUR code:  opensec scan ./                  ║</tspan>
+<tspan x="16.0" y="151" fill="#FF2D78">╚════════════════════════════════════════════════════════╝</tspan></text>
+</svg>
