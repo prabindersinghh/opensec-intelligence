@@ -1,0 +1,46 @@
+name: OpenSec Security Scan
+
+# Copy this file into your own repo to gate PRs on OpenSec findings.
+# The deterministic scanner needs no model; the LLM analyst/consensus stages
+# activate automatically if an Ollama model is available.
+
+on:
+  pull_request:
+    branches: [main, master]
+  push:
+    branches: [main]
+
+jobs:
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Optional: enable the LLM analyst/consensus stages with a small model.
+      # Remove this step to run the (fast, deterministic) scanner only.
+      - name: Setup Ollama (optional)
+        run: |
+          curl -fsSL https://ollama.com/install.sh | sh
+          ollama serve &
+          sleep 5
+          ollama pull llama3.2:3b
+        continue-on-error: true
+
+      - name: Install OpenSec
+        run: npm install -g opensec-intelligence
+
+      # --ci writes a JSON findings array to stdout and exits 1 if any
+      # CRITICAL finding is present, failing the job.
+      - name: Run Security Scan
+        run: opensec scan ./ --ci --output json | tee opensec-results.json
+
+      - name: Upload Security Report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: opensec-report
+          path: opensec-results.json
