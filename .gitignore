@@ -28,3 +28,7 @@ open-multi-agent-main/
 gemini-cli-main/
 audit-report.pdf
 audit-report*.pdf
+
+# OpenSec scan artifacts
+.opensec/
+opensec-report.html

@@ -36,10 +36,12 @@ export interface CliArgs {
   // browser
   browser?: boolean
   // opensec subcommands
-  scanPath?: string   // 'scan [path]' — triggers security team preset
-  scanQuick?: boolean // --quick: scanner agent only
+  scanPath?: string   // 'scan [path]' — runs the deterministic security pipeline
+  scanQuick?: boolean // --quick: scanner only, skip LLM stages
   scanCloud?: boolean // --cloud: use cloud provider for analyst/consensus
-  fix?: boolean       // 'fix' — run fixer agent on last scan results
+  scanDemo?: boolean  // --demo: scan the bundled vulnerable app
+  scanCi?: boolean    // --ci: JSON to stdout, exit 1 on CRITICAL
+  fix?: boolean       // 'fix' — run fixer on last scan results
   report?: boolean    // 'report' — output HTML report of last findings
 }
 
@@ -127,6 +129,16 @@ export function parseArgs(argv: string[]): CliArgs {
         break
       case '--cloud':
         args.scanCloud = true
+        break
+      case '--demo':
+        args.scanDemo = true
+        if (args.scanPath === undefined) args.scanPath = './'
+        break
+      case '--ci':
+        args.scanCi = true
+        break
+      case '--output':
+        args.outputFormat = argv[++i] as 'text' | 'json' | 'stream-json'
         break
       case 'serve':
         args.serve = true

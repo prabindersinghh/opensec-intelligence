@@ -236,6 +236,48 @@ async function main(): Promise<void> {
     return
   }
 
+  // ---------------------------------------------------------------------------
+  // Security pipeline subcommands: scan / fix / report / --demo.
+  // These run the deterministic engine and do NOT require Ollama to be running
+  // (the LLM stages are layered on top and degrade gracefully when offline).
+  // ---------------------------------------------------------------------------
+  if (args.scanPath !== undefined || args.fix || args.report) {
+    const { resolve } = await import('path')
+    const { securityScan, securityFix, securityReport, securityDemo } = await import('../src/security/cli.js')
+    const secModel = args.model ?? process.env.OPENSEC_MODEL ?? process.env.CMDR_MODEL ?? 'qwen2.5-coder:14b'
+
+    // --cloud hint (cloud analyst/consensus would need a provider key).
+    if (args.scanCloud && !(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY)) {
+      console.log(`  ${DIM('--cloud set but no ANTHROPIC_API_KEY/OPENAI_API_KEY — using local Ollama.')}`)
+    }
+
+    try {
+      if (args.scanDemo) {
+        process.exit(await securityDemo({ version: VERSION, model: secModel, ollamaUrl }))
+      }
+      if (args.fix) {
+        process.exit(await securityFix({ targetPath: process.cwd(), model: secModel, ollamaUrl }))
+      }
+      if (args.report) {
+        process.exit(await securityReport({ targetPath: process.cwd() }))
+      }
+      const targetPath = resolve(args.scanPath!)
+      process.exit(await securityScan({
+        targetPath,
+        version: VERSION,
+        model: secModel,
+        ollamaUrl,
+        quick: args.scanQuick,
+        cloud: args.scanCloud,
+        ci: args.scanCi,
+        json: args.outputFormat === 'json',
+      }))
+    } catch (err) {
+      console.error(renderError(err instanceof Error ? err.message : String(err)))
+      process.exit(1)
+    }
+  }
+
   // Auto-detect model if not specified
   let model = args.model ?? process.env.OPENSEC_MODEL ?? process.env.CMDR_MODEL
   if (!model) {
@@ -266,119 +308,6 @@ async function main(): Promise<void> {
     process.chdir(target)
   }
 
-  // Handle 'scan' subcommand: opensec scan [path] [--quick] [--cloud]
-  if (args.scanPath !== undefined) {
-    const { resolve } = await import('path')
-    const scanTarget = resolve(args.scanPath)
-
-    // Change to scan target directory so agents work relative to it
-    try {
-      process.chdir(scanTarget)
-    } catch {
-      console.error(renderError(`Cannot access scan path: ${scanTarget}`))
-      process.exit(1)
-    }
-
-    // --cloud: switch provider to anthropic or openai for analyst/consensus
-    let scanProvider = args.provider
-    if (args.scanCloud) {
-      const anthropicKey = process.env.ANTHROPIC_API_KEY ?? process.env.OPENSEC_ANTHROPIC_API_KEY
-      const openaiKey = process.env.OPENAI_API_KEY ?? process.env.OPENSEC_OPENAI_API_KEY
-      if (anthropicKey) {
-        scanProvider = 'anthropic'
-        model = model ?? 'claude-opus-4-5'
-        console.log(`  ${CYAN('☁')}  ${DIM('Cloud mode: Anthropic')}`)
-      } else if (openaiKey) {
-        scanProvider = 'openai'
-        model = model ?? 'gpt-4o'
-        console.log(`  ${CYAN('☁')}  ${DIM('Cloud mode: OpenAI')}`)
-      } else {
-        console.error(renderError(
-          'Cloud mode requires ANTHROPIC_API_KEY or OPENAI_API_KEY.\n' +
-          '  Falling back to local Ollama model.',
-        ))
-      }
-    }
-
-    // --quick: scanner agent only (single-agent, no full team pipeline)
-    const teamMode = args.scanQuick ? undefined : 'security'
-    const quickPrompt = args.scanQuick
-      ? 'Run a quick security surface scan of this codebase. Use glob and grep to find all code, config, secret, and infra files. Output a structured JSON attack surface map.'
-      : undefined
-
-    checkForUpdate(VERSION).catch(() => {})
-
-    try {
-      await startRepl({
-        model: model!,
-        ollamaUrl,
-        provider: scanProvider,
-        version: VERSION,
-        initialPrompt: quickPrompt,
-        dangerouslySkipPermissions: args.dangerouslySkipPermissions,
-        verbose: args.verbose,
-        team: teamMode,
-        maxTurns: args.maxTurns,
-        outputFormat: args.outputFormat,
-        effort: args.fast ? 'low' : args.effort,
-        noBuddy: args.noBuddy,
-      })
-      console.log(`\n  ${GREEN('✦')} ${chalk.white.bold('Scan complete')} ${DIM('—')} ${DIM('OpenSec Intelligence by Prabinder Singh')}`)
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      console.error(renderError(msg))
-      process.exit(1)
-    }
-    return
-  }
-
-  // Handle 'fix' subcommand: run fixer agent on last scan results
-  if (args.fix) {
-    checkForUpdate(VERSION).catch(() => {})
-    try {
-      await startRepl({
-        model: model!,
-        ollamaUrl,
-        provider: args.provider,
-        version: VERSION,
-        initialPrompt: 'You are the OpenSec fixer agent. Review the most recent security findings in this session and apply fixes. For each validated HIGH or CRITICAL finding: show the before/after diff, explain why the fix closes the vulnerability, then ask for approval before writing. After all fixes, run git diff and summarize all changes.',
-        dangerouslySkipPermissions: args.dangerouslySkipPermissions,
-        verbose: args.verbose,
-        maxTurns: args.maxTurns,
-        outputFormat: args.outputFormat,
-        noBuddy: args.noBuddy,
-      })
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      console.error(renderError(msg))
-      process.exit(1)
-    }
-    return
-  }
-
-  // Handle 'report' subcommand: output HTML report of last findings
-  if (args.report) {
-    checkForUpdate(VERSION).catch(() => {})
-    try {
-      await startRepl({
-        model: model!,
-        ollamaUrl,
-        provider: args.provider,
-        version: VERSION,
-        initialPrompt: 'Generate an HTML security report from the findings in this session. Include: executive summary, findings table (severity/file/line/description), CVSS estimates, remediation recommendations. Write the report to opensec-report.html in the current directory.',
-        dangerouslySkipPermissions: args.dangerouslySkipPermissions,
-        verbose: args.verbose,
-        maxTurns: args.maxTurns,
-        outputFormat: args.outputFormat,
-        noBuddy: args.noBuddy,
-      })
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err)
-      console.error(renderError(msg))
-      process.exit(1)
-    }
-    return
-  }
 
   // Non-blocking update check (fire-and-forget, prints after welcome banner)
   checkForUpdate(VERSION).catch(() => {})
