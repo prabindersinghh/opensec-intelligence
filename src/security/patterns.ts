@@ -129,11 +129,12 @@ export const CODE_PATTERNS: SecurityPattern[] = [
   },
   {
     name: 'HTTP not HTTPS',
-    regex: /http:\/\/(?!localhost|127\.0\.0\.1|0\.0\.0\.0)/, // opensec-ignore
+    // Excludes localhost and well-known non-fetchable XML/schema namespace hosts.
+    regex: /http:\/\/(?!localhost|127\.0\.0\.1|0\.0\.0\.0|www\.w3\.org|schemas\.|[^/\s]*\.local)/, // opensec-ignore
     severity: 'MEDIUM',
     category: 'code',
-    description: 'A plaintext http:// URL to a non-local host was found.',
-    remediation: 'Use https:// for all external endpoints to prevent eavesdropping and tampering.',
+    description: 'A plaintext (non-TLS) URL to a non-local host was found.',
+    remediation: 'Use TLS for all external endpoints to prevent eavesdropping and tampering.',
   },
   {
     name: 'CORS Wildcard',
