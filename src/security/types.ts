@@ -63,6 +63,28 @@ export interface Finding {
   diffPath?: string
 }
 
+export interface ExploitResult {
+  success: boolean      // true = vuln confirmed; false = not exploitable / already patched
+  input: string         // malicious input that was sent
+  output: string        // stdout from the exploit (capped at 500 chars)
+  exitCode: number
+  duration: number      // ms
+  error?: string
+}
+
+export type ExploitLang = 'javascript' | 'python' | 'bash'
+
+export interface ProofResult {
+  findingId: string
+  exploitCode: string
+  exploitLang: ExploitLang
+  beforePatch: ExploitResult
+  afterPatch: ExploitResult
+  verified: boolean     // true iff beforePatch.success===true AND afterPatch.success===false
+  skipped: boolean
+  skipReason?: string
+}
+
 export interface ScanResult {
   tool: string
   version: string
