@@ -1,7 +1,7 @@
 {
   "name": "opensec-intelligence",
-  "version": "3.0.1",
-  "description": "The security engine Claude Code doesn't have. Local-first, free forever, 4-agent AI pipeline.",
+  "version": "3.1.0",
+  "description": "Local-first, multi-agent AI security scanner. Finds vulnerabilities. Writes the patches. Free forever.",
   "type": "module",
   "bin": {
     "opensec": "./bin/opensec.js"
@@ -15,6 +15,8 @@
     "test:watch": "vitest",
     "lint": "tsc --noEmit",
     "start": "node dist/bin/cmdr.js",
+    "assets": "npm run build && node scripts/generate-readme-assets.js",
+    "postinstall": "node bin/postinstall.js",
     "eval": "npx tsx evals/run-evals.ts",
     "eval:report": "npx tsx evals/report.ts",
     "prepublishOnly": "npm run build"
@@ -22,6 +24,10 @@
   "files": [
     "dist",
     "bin/opensec.js",
+    "bin/postinstall.js",
+    "demo",
+    "docs/screenshots",
+    "scripts/generate-readme-assets.js",
     "LICENSE",
     "README.md"
   ],
@@ -56,14 +62,19 @@
     "vitest": "^2.1.0"
   },
   "keywords": [
-    "ai",
-    "agent",
-    "coding",
+    "security",
+    "vulnerability-scanner",
+    "ai-security",
     "ollama",
+    "local-llm",
+    "devsecops",
+    "owasp",
+    "sast",
+    "code-security",
+    "secrets-detection",
+    "agent",
     "multi-agent",
-    "terminal",
-    "cli",
-    "local-llm"
+    "cli"
   ],
   "author": "Prabinder Singh <prabindersinghh@gmail.com>",
   "license": "MIT",

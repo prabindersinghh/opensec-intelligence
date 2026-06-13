@@ -190,9 +190,11 @@ export function printHelp(): void {
   ${chalk.white.bold('OpenSec Intelligence')} ${DIM('— local-first AI security engine')}
 
   ${GREEN('SCAN COMMANDS')}
-    opensec scan [path]          Full 4-agent security scan (default: ./)
-    opensec scan [path] --quick  Scanner only, fast sweep
+    opensec scan [path]          Full pipeline: scan + analyst + consensus
+    opensec scan [path] --quick  Deterministic scanner only, fast sweep
     opensec scan [path] --cloud  Cloud models for analyst + consensus
+    opensec scan --demo          Scan a bundled vulnerable app (instant proof)
+    opensec scan ./ --ci         JSON to stdout, exit 1 on CRITICAL (for CI)
 
   ${GREEN('FIX & REPORT')}
     opensec fix                  Apply fixes from last scan
