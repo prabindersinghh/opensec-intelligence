@@ -224,11 +224,8 @@ VULN-SPECIFIC GUIDANCE:
 - CORS Wildcard: pass a mock res object with getHeader/setHeader, call the function, check res.getHeader('Access-Control-Allow-Origin') === '*'
 - Hardcoded API Key: read exported api key value, confirm it is a string literal
 
-OUTPUT FORMAT — respond ONLY with this JSON (no explanation, no markdown):
-{
-  "lang": "javascript",
-  "code": "<full exploit script with \\n newlines>"
-}`
+OUTPUT FORMAT — respond ONLY with valid JSON. CRITICAL: all newlines in "code" MUST be escaped as \\n — never use literal newlines inside a JSON string value:
+{"lang":"javascript","code":"line1\\nline2\\nline3"}`
 }
 
 // ---------------------------------------------------------------------------

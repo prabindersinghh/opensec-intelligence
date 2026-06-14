@@ -75,29 +75,61 @@ export async function generate(config: LlmConfig, prompt: string): Promise<strin
 }
 
 /**
+ * Repair a JSON string that contains unescaped control characters inside
+ * string values (the most common LLM formatting mistake).
+ */
+function repairJson(s: string): string {
+  let inString = false
+  let escaped = false
+  let out = ''
+  for (const ch of s) {
+    if (escaped) { out += ch; escaped = false; continue }
+    if (ch === '\\') { escaped = true; out += ch; continue }
+    if (ch === '"') { inString = !inString; out += ch; continue }
+    if (inString) {
+      if (ch === '\n') { out += '\\n'; continue }
+      if (ch === '\r') { out += '\\r'; continue }
+      if (ch === '\t') { out += '\\t'; continue }
+    }
+    out += ch
+  }
+  return out
+}
+
+/**
  * Extract the first JSON object/array from a model response.
  * Models often wrap JSON in prose or ```json fences — this is forgiving.
+ * Also repairs unescaped newlines/tabs that models embed in string values.
  */
 export function extractJson<T = unknown>(text: string): T | null {
   // Strip code fences first.
   const fenced = text.match(/```(?:json)?\s*([\s\S]*?)```/i)
   const candidate = fenced ? fenced[1] : text
 
-  // Find the outermost {...} or [...] span.
+  // Find the outermost {...} or [...} span, tracking string context so
+  // braces inside string values don't confuse the depth counter.
   const start = candidate.search(/[{[]/)
   if (start === -1) return null
   const open = candidate[start]
   const close = open === '{' ? '}' : ']'
   let depth = 0
+  let inStr = false
+  let esc = false
   for (let i = start; i < candidate.length; i++) {
-    if (candidate[i] === open) depth++
-    else if (candidate[i] === close) {
+    const ch = candidate[i]
+    if (esc) { esc = false; continue }
+    if (ch === '\\' && inStr) { esc = true; continue }
+    if (ch === '"') { inStr = !inStr; continue }
+    if (inStr) continue
+    if (ch === open) depth++
+    else if (ch === close) {
       depth--
       if (depth === 0) {
+        const slice = candidate.slice(start, i + 1)
         try {
-          return JSON.parse(candidate.slice(start, i + 1)) as T
+          return JSON.parse(slice) as T
         } catch {
-          return null
+          try { return JSON.parse(repairJson(slice)) as T } catch { return null }
         }
       }
     }
