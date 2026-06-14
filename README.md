@@ -166,7 +166,9 @@ opensec prove ./ --dry-run
 4. **✅ Exploit Blocked After Patch** — the same exploit re-runs against the patched code; it must NOT fire
 5. **Verification Complete** — proof saved to `.opensec/proofs/<id>.json` for audit
 
-**Safety:** Exploits run in an isolated subprocess. Network access and filesystem writes outside `/tmp` are blocked before execution. Exploit files are deleted immediately after use.
+**Safety:** Exploits run in an isolated subprocess with a minimal environment — real credentials and shell variables are never passed in. `eval()`/`Function()` string codegen is disabled inside the subprocess. Network access and filesystem writes outside `/tmp` are blocked before execution. Exploit files are deleted immediately after use.
+
+> ⚠️ **Do not run `opensec prove` on untrusted or adversarial code.** Scanned file content is embedded in the LLM prompt; a file containing crafted LLM directives could influence the generated exploit. The subprocess sandbox reduces but does not eliminate this risk — full isolation requires a container or VM.
 
 > Try it now: `opensec scan --demo` runs the full loop on a bundled vulnerable app.
 

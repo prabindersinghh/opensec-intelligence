@@ -80,14 +80,19 @@ export async function runExploit(
   const start = Date.now()
 
   try {
+    // Minimal env — never inherit process.env (would expose real credentials/secrets).
+    // NODE_OPTIONS disables eval()/Function() string codegen inside the exploit subprocess.
     const result = spawnSync(cmd, [exploitFile], {
       cwd: projectRoot,
       timeout: MAX_EXEC_MS,
       maxBuffer: MAX_OUTPUT_BYTES,
       env: {
-        ...process.env,
-        DATABASE_URL: 'sqlite::memory:',
+        PATH: process.env.PATH ?? '/usr/bin:/bin',
+        HOME: os.tmpdir(),
+        TMPDIR: os.tmpdir(),
         NODE_ENV: 'test',
+        DATABASE_URL: 'sqlite::memory:',
+        NODE_OPTIONS: '--disallow-code-generation-from-strings',
       },
     })
 
@@ -169,9 +174,19 @@ interface ExploitGenResponse {
   code: string
 }
 
+function sanitizeFileContent(raw: string): string {
+  // Strip lines that are pure natural-language instructions — reduces prompt-injection
+  // risk when the scanned file embeds adversarial LLM directives in comments.
+  return raw
+    .split('\n')
+    .filter((l) => !/^\s*(\/\/|#|\/\*|\*)\s*(ignore|instead|you are|your (new )?instructions?|disregard|forget|system:|assistant:)/i.test(l))
+    .join('\n')
+}
+
 function buildExploitPrompt(finding: Finding, fileContent: string): string {
-  const truncated = fileContent.length > 3000
-  const content = fileContent.slice(0, 3000) + (truncated ? '\n[...truncated]' : '')
+  const safe = sanitizeFileContent(fileContent)
+  const truncated = safe.length > 3000
+  const content = safe.slice(0, 3000) + (truncated ? '\n[...truncated]' : '')
 
   return `You are a security researcher writing a minimal proof-of-concept exploit.
 
