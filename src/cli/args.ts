@@ -44,6 +44,9 @@ export interface CliArgs {
   fix?: boolean          // 'fix' — run fixer on last scan results
   report?: boolean       // 'report' — output HTML report of last findings
   validateLlm?: boolean  // --validate-llm: smoke-test Ollama pipeline end-to-end
+  prove?: string        // 'prove [path]' — run the prove loop on last scan findings
+  showExploit?: boolean // --show-exploit: print generated exploit code
+  proveDryRun?: boolean // --dry-run: generate + run exploit but skip patching
 }
 
 export function parseArgs(argv: string[]): CliArgs {
@@ -169,6 +172,15 @@ export function parseArgs(argv: string[]): CliArgs {
       case '--validate-llm':
         args.validateLlm = true
         break
+      case 'prove':
+        args.prove = (argv[i + 1] && !argv[i + 1].startsWith('-')) ? argv[++i] : './'
+        break
+      case '--show-exploit':
+        args.showExploit = true
+        break
+      case '--dry-run':
+        args.proveDryRun = true
+        break
       default:
         // If no flag prefix, treat as inline prompt
         if (!arg.startsWith('-') && !args.prompt) {
@@ -203,6 +215,9 @@ export function printHelp(): void {
   ${GREEN('FIX & REPORT')}
     opensec fix                  Apply fixes from last scan
     opensec report               Generate HTML security report
+    opensec prove [path]         Prove vulns are real + verify patches work
+    opensec prove ./ --dry-run   Exploit only, skip patching
+    opensec prove ./ --show-exploit  Print generated exploit code
 
   ${GREEN('GENERAL')}
     opensec -m <model>           Set Ollama model

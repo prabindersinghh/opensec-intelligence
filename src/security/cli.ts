@@ -25,6 +25,8 @@ import {
 } from './report.js'
 import { ollamaAvailable, checkOllama, generateJson, type LlmConfig } from './llm.js'
 import { tally, type Finding } from './types.js'
+import { prove } from './prover.js'
+import { displayProofResult, displayProveSummary } from './verifier-display.js'
 
 const PINK = chalk.hex('#FF2D78')
 const GREEN = chalk.hex('#00FF94')
@@ -270,6 +272,71 @@ export async function validateLlmPipeline(opts: { model: string; ollamaUrl?: str
       '\n',
   )
   return passed === all ? 0 : 1
+}
+
+/** `opensec prove [path]` */
+export async function securityProve(opts: {
+  targetPath: string
+  model: string
+  ollamaUrl?: string
+  showExploit?: boolean
+  dryRun?: boolean
+}): Promise<number> {
+  if (opts.showExploit) process.env.OPENSEC_SHOW_EXPLOIT = '1'
+
+  const status = await checkOllama(opts.ollamaUrl)
+  if (!status.available) {
+    console.log(renderError('opensec prove requires Ollama.\n  Start with: ollama serve'))
+    return 1
+  }
+
+  const model = opts.model || status.model || 'llama3.2:3b'
+  console.log(`\n  ${chalk.bold('OPENSEC PROVE')}  ${DIM('model:')} ${GREEN(model)}\n`)
+
+  const scan = await loadLastScan(opts.targetPath)
+  let findings = scan?.findings ?? []
+
+  if (findings.length === 0) {
+    console.log(DIM('  No previous scan — running scanner first…'))
+    const { runScanner } = await import('./scanner.js')
+    const result = await runScanner({ targetPath: opts.targetPath, version: '0', persist: true })
+    findings = result.findings
+  }
+
+  const targets = findings.filter((f) => f.severity === 'CRITICAL' || f.severity === 'HIGH')
+
+  if (targets.length === 0) {
+    console.log(GREEN('  ✅ No HIGH/CRITICAL findings to prove. Good news!\n'))
+    return 0
+  }
+
+  console.log(chalk.bold(`  Proving ${targets.length} HIGH/CRITICAL finding(s)…\n`))
+
+  const llm: LlmConfig = { baseUrl: opts.ollamaUrl, model }
+  const results = []
+  const proofsDir = path.join(opts.targetPath, '.opensec', 'proofs')
+  await fs.mkdir(proofsDir, { recursive: true })
+
+  for (const finding of targets) {
+    const proof = await prove(
+      finding,
+      path.resolve(opts.targetPath),
+      llm,
+      (msg) => process.stdout.write(DIM(`  ${msg}\r`)),
+      opts.dryRun,
+    )
+    process.stdout.write('\x1b[2K\r')
+    displayProofResult(finding, proof)
+    results.push(proof)
+    await fs.writeFile(
+      path.join(proofsDir, `${finding.id}.json`),
+      JSON.stringify({ finding, proof }, null, 2),
+    )
+  }
+
+  displayProveSummary(results)
+  const failedVerifications = results.filter((r) => !r.verified && !r.skipped && r.beforePatch.success)
+  return failedVerifications.length > 0 ? 1 : 0
 }
 
 function renderError(msg: string): string {
