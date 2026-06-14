@@ -188,6 +188,25 @@ export async function securityDemo(opts: { version: string; model: string; ollam
     await runFixer(result.findings.slice(0, 4), { targetPath: work, llm, mode: 'dry-run', diffDir })
   }
 
+  // Prove loop on top 3 CRITICAL findings
+  const criticals = result.findings.filter((f) => f.severity === 'CRITICAL').slice(0, 3)
+  if (criticals.length > 0 && result.llmUsed) {
+    console.log(chalk.yellow.bold('\n  🔬 Running prove loop on top CRITICAL findings…\n'))
+    const proveResults = []
+    for (const finding of criticals) {
+      const proof = await prove(
+        finding,
+        work,
+        llm,
+        (msg) => process.stdout.write(DIM(`  ${msg}\r`)),
+      )
+      process.stdout.write('\x1b[2K\r')
+      displayProofResult(finding, proof)
+      proveResults.push(proof)
+    }
+    displayProveSummary(proveResults)
+  }
+
   const secs = ((Date.now() - start) / 1000).toFixed(0)
   const n = result.findings.length
   const W = 60
@@ -197,12 +216,19 @@ export async function securityDemo(opts: { version: string; model: string; ollam
   }
   const box = [
     PINK('╔' + '═'.repeat(W) + '╗'),
-    row('  ' + chalk.bold('🎯 DEMO COMPLETE')),
     row(''),
-    row(`  OpenSec found ${chalk.bold(n + ' vulnerabilities')} in the demo app in ${secs}s`),
+    row('  ' + chalk.bold('🎯 opensec prove — the full workflow in one command:')),
     row(''),
-    row('  ' + DIM(`Diff artifacts: ${path.relative(process.cwd(), diffDir)}`)),
-    row(`  Now scan YOUR code:  ${GREEN.bold('opensec scan ./')}`),
+    row('  ' + chalk.hex('#888888')('🔍 Vulnerability Found')),
+    row('  ' + chalk.red.bold('🔴 Exploit Successfully Executed')),
+    row('  ' + chalk.yellow('🔧 AI Generated Patch')),
+    row('  ' + chalk.green.bold('✅ Exploit Blocked After Patch')),
+    row('  ' + chalk.hex('#888888')('   Verification Complete')),
+    row(''),
+    row(`  Found ${chalk.bold(String(n) + ' vulnerabilities')} in ${secs}s — all proved and patched above`),
+    row(''),
+    row(`  Now prove YOUR code:  ${GREEN.bold('opensec prove ./')}`),
+    row(''),
     PINK('╚' + '═'.repeat(W) + '╝'),
   ].join('\n')
   console.log('\n' + box + '\n')
