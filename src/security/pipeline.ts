@@ -44,11 +44,14 @@ export async function runPipeline(opts: PipelineOptions): Promise<PipelineResult
   if (!opts.quick) {
     const available = await ollamaAvailable(opts.llm.baseUrl)
     if (available) {
-      llmUsed = true
       opts.onStage?.('analyst', 'confirming HIGH/CRITICAL findings')
       findings = await runAnalyst(findings, { targetPath: opts.targetPath, llm: opts.llm })
-      opts.onStage?.('consensus', 'adversarial review of CRITICAL findings')
-      findings = await runConsensus(findings, { targetPath: opts.targetPath, llm: opts.llm })
+      // llmUsed = true only when the analyst actually got LLM responses (confirmed field set)
+      llmUsed = findings.some((f) => f.confirmed !== undefined)
+      if (llmUsed) {
+        opts.onStage?.('consensus', 'adversarial review of CRITICAL findings')
+        findings = await runConsensus(findings, { targetPath: opts.targetPath, llm: opts.llm })
+      }
     }
   }
 

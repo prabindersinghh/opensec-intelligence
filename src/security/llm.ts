@@ -53,6 +53,31 @@ export async function ollamaAvailable(baseUrl = DEFAULT_URL): Promise<boolean> {
   return (await checkOllama(baseUrl)).available
 }
 
+/**
+ * Resolve the model to use: validates that `preferredModel` is installed and
+ * falls back to the best available model if not.  Returns the resolved model
+ * name and whether a fallback was applied.
+ */
+export async function resolveModel(
+  preferredModel: string,
+  baseUrl = DEFAULT_URL,
+): Promise<{ model: string; fallback: boolean }> {
+  try {
+    const res = await fetch(`${(baseUrl ?? DEFAULT_URL).replace(/\/$/, '')}/api/tags`, {
+      signal: AbortSignal.timeout(2000),
+    })
+    if (!res.ok) return { model: preferredModel, fallback: false }
+    const data = (await res.json()) as { models?: { name: string }[] }
+    const names = (data.models ?? []).map((m) => m.name)
+    const installed = names.some((n) => n === preferredModel || n.startsWith(preferredModel.split(':')[0] + ':'))
+    if (installed) return { model: preferredModel, fallback: false }
+    const best = PREFERRED_MODELS.find((p) => names.some((n) => n.startsWith(p.split(':')[0] + ':'))) ?? names[0]
+    return best ? { model: best, fallback: true } : { model: preferredModel, fallback: false }
+  } catch {
+    return { model: preferredModel, fallback: false }
+  }
+}
+
 /** Single-shot completion via /api/generate. Returns the raw text. */
 export async function generate(config: LlmConfig, prompt: string): Promise<string> {
   const baseUrl = (config.baseUrl ?? DEFAULT_URL).replace(/\/$/, '')

@@ -244,7 +244,14 @@ async function main(): Promise<void> {
   if (args.scanPath !== undefined || args.fix || args.report || args.validateLlm || args.prove !== undefined) {
     const { resolve } = await import('path')
     const { securityScan, securityFix, securityReport, securityDemo, validateLlmPipeline, securityProve } = await import('../src/security/cli.js')
-    const secModel = args.model ?? process.env.OPENSEC_MODEL ?? process.env.CMDR_MODEL ?? 'qwen2.5-coder:14b'
+    const { resolveModel } = await import('../src/security/llm.js')
+    const preferredModel = args.model ?? process.env.OPENSEC_MODEL ?? process.env.CMDR_MODEL ?? 'qwen2.5-coder:14b'
+
+    // Resolve to an actually-installed model; warn if falling back.
+    const { model: secModel, fallback } = await resolveModel(preferredModel, ollamaUrl)
+    if (fallback) {
+      process.stderr.write(`  Model ${preferredModel} not installed — using ${secModel}\n`)
+    }
 
     // --cloud hint (cloud analyst/consensus would need a provider key).
     if (args.scanCloud && !(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY)) {

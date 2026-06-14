@@ -6,7 +6,7 @@
  * deterministic pipeline that produces structured findings and real artifacts.
  */
 
-import { promises as fs } from 'fs'
+import { promises as fs, existsSync } from 'fs'
 import * as os from 'os'
 import * as path from 'path'
 import { fileURLToPath } from 'url'
@@ -51,6 +51,11 @@ function exitCodeFor(findings: Finding[]): number {
 
 /** `opensec scan [path]` */
 export async function securityScan(opts: SecurityScanOptions): Promise<number> {
+  if (!existsSync(opts.targetPath)) {
+    process.stderr.write(`  Error: target path does not exist: ${opts.targetPath}\n`)
+    return 1
+  }
+
   const llm: LlmConfig = { baseUrl: opts.ollamaUrl, model: opts.model }
   const machineOutput = Boolean(opts.ci || opts.json)
 

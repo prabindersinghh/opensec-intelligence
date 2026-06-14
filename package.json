@@ -1,6 +1,6 @@
 {
   "name": "opensec-intelligence",
-  "version": "3.1.0",
+  "version": "3.2.0",
   "description": "Local-first, multi-agent AI security scanner. Finds vulnerabilities. Writes the patches. Free forever.",
   "type": "module",
   "bin": {
@@ -13,6 +13,10 @@
     "dev": "tsc --watch",
     "test": "vitest run",
     "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:e2e:cli": "playwright test tests/e2e/cli.spec.ts",
+    "test:e2e:api": "playwright test tests/e2e/api.spec.ts",
+    "test:all": "vitest run && playwright test tests/e2e/cli.spec.ts",
     "lint": "tsc --noEmit",
     "start": "node dist/bin/cmdr.js",
     "assets": "npm run build && node scripts/generate-readme-assets.js",
@@ -55,6 +59,7 @@
     "zod": "^3.23.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.60.0",
     "@types/node": "^22.0.0",
     "@types/react": "^19.2.2",
     "tsx": "^4.21.0",
