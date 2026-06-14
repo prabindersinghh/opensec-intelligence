@@ -1,0 +1,6 @@
+{
+  "name": "vulnerable-demo-app",
+  "version": "1.0.0",
+  "description": "Deliberately vulnerable app for opensec prove demo. DO NOT DEPLOY.",
+  "main": "index.js"
+}
