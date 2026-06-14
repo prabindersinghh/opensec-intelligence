@@ -58,6 +58,7 @@ opensec scan ./
 | Cost | $20/month | **Free forever** |
 | Local/private | ❌ Cloud only | ✅ 100% on your machine |
 | Fixes vulnerabilities | ❌ | ✅ Writes exact patches |
+| Proves exploits work | ❌ | ✅ Exploit + patch verification |
 | Multi-model consensus | ❌ | ✅ 3+ models validate each finding |
 
 | | Existing tools | OpenSec Intelligence |
@@ -68,6 +69,7 @@ opensec scan ./
 | Privacy | Code sent to cloud | **Zero data leaves your machine** |
 | False positives | High | Filtered by 0.7+ confidence threshold |
 | Fixes | Suggestions only | **Writes the exact patch. Asks approval. Commits.** |
+| Exploit verification | None | **Generates exploit, runs it, verifies patch closes it** |
 | Cross-file reasoning | None | **Correlates findings across your entire system** |
 
 ---
@@ -130,6 +132,43 @@ Your codebase
 ```
 
 **The insight:** Single-model tools hallucinate. OpenSec's consensus layer means every HIGH finding was independently confirmed. If 3 models agree — you fix it. If only 1 does — it gets filtered.
+
+---
+
+## The prove loop — what makes OpenSec different
+
+Other tools find vulnerabilities. OpenSec **proves they're real, then proves the patch works.**
+
+```
+🔍 Vulnerability Found
+🔴 Exploit Successfully Executed
+🔧 AI Generated Patch
+✅ Exploit Blocked After Patch
+   Verification Complete
+```
+
+```bash
+# Run the full prove loop on HIGH/CRITICAL findings from your last scan
+opensec prove ./
+
+# Show the generated exploit code
+opensec prove ./ --show-exploit
+
+# Dry run: generate + run exploit but skip patching
+opensec prove ./ --dry-run
+```
+
+**What happens under the hood:**
+
+1. **🔍 Vulnerability Found** — deterministic scanner + LLM consensus identifies and confirms the finding
+2. **🔴 Exploit Successfully Executed** — a local LLM writes a minimal runnable script that triggers the vulnerability; it runs in a sandboxed subprocess and prints `EXPLOITED:` if confirmed
+3. **🔧 AI Generated Patch** — the Fixer agent synthesizes the exact fix and applies it silently
+4. **✅ Exploit Blocked After Patch** — the same exploit re-runs against the patched code; it must NOT fire
+5. **Verification Complete** — proof saved to `.opensec/proofs/<id>.json` for audit
+
+**Safety:** Exploits run in an isolated subprocess. Network access and filesystem writes outside `/tmp` are blocked before execution. Exploit files are deleted immediately after use.
+
+> Try it now: `opensec scan --demo` runs the full loop on a bundled vulnerable app.
 
 ---
 
