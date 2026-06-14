@@ -1,46 +1,43 @@
 <div align="center">
 
-<pre>
+```
  ██████╗ ██████╗ ███████╗███╗   ██╗███████╗███████╗ ██████╗ 
 ██╔═══██╗██╔══██╗██╔════╝████╗  ██║██╔════╝██╔════╝██╔════╝ 
 ██║   ██║██████╔╝█████╗  ██╔██╗ ██║███████╗█████╗  ██║      
 ██║   ██║██╔═══╝ ██╔══╝  ██║╚██╗██║╚════██║██╔══╝  ██║      
 ╚██████╔╝██║     ███████╗██║ ╚████║███████║███████╗╚██████╗ 
  ╚═════╝ ╚═╝     ╚══════╝╚═╝  ╚═══╝╚══════╝╚══════╝ ╚═════╝ 
-</pre>
+```
 
-**The world's first local-first, multi-agent AI security engine.**<br/>
+**Find vulnerabilities. Prove they're real. Patch them. Prove the patch works.**<br/>
 **Free forever. No API keys. Runs on your machine.**
 
 <br/>
-
-[![The Security Layer Claude Code Doesn't Have](https://img.shields.io/badge/the%20security%20layer-Claude%20Code%20doesn't%20have-FF2D78?style=for-the-badge)](https://github.com/prabindersinghh/opensec-intelligence)
 
 [![npm version](https://img.shields.io/npm/v/opensec-intelligence?color=FF2D78&label=npm&style=flat-square)](https://www.npmjs.com/package/opensec-intelligence)
 [![npm downloads](https://img.shields.io/npm/dw/opensec-intelligence?color=00FF94&style=flat-square)](https://www.npmjs.com/package/opensec-intelligence)
 [![License: MIT](https://img.shields.io/badge/License-MIT-white?style=flat-square)](LICENSE)
 [![Powered by Ollama](https://img.shields.io/badge/runs%20on-Ollama-blue?style=flat-square)](https://ollama.com)
+[![Tests](https://img.shields.io/badge/tests-148%20passing-00FF94?style=flat-square)](#)
 [![Built by Prabinder Singh](https://img.shields.io/badge/built%20by-Prabinder%20Singh-FF2D78?style=flat-square)](https://github.com/prabindersinghh)
 
 <br/>
 
-> **Built by [Prabinder Singh](https://github.com/prabindersinghh)** — B.Tech CS, Thapar Institute · Founder, Leorit.ai
-
-<br/>
-
-[Quickstart](#quickstart) · [How it works](#how-it-works) · [Agents](#the-4-agents) · [Skills](#skills) · [MCP](#mcp-integration) · [Models](#model-recommendations)
+[Install](#quickstart) · [The prove loop](#the-prove-loop) · [How it works](#how-it-works) · [CLI reference](#commands) · [Models](#model-recommendations)
 
 </div>
 
 ---
 
-## What is OpenSec Intelligence?
+## The problem with every other security tool
 
-Claude Code writes your code. **OpenSec Intelligence secures it.**
+They give you a list of 47 findings.  
+You fix maybe 3 of them — the ones you're sure about.  
+The other 44 sit there because you can't tell what's real.
 
-> 💬 "Claude Code writes your code. OpenSec Intelligence makes sure it doesn't get hacked."
+**OpenSec Intelligence solves the trust problem.**
 
-A four-agent AI pipeline that scans your entire codebase — code, infrastructure, secrets, configs — finds real vulnerabilities, validates them with consensus scoring, and writes the exact patches. Runs completely free on your machine with Ollama. No data leaves your environment.
+It doesn't just find the vulnerability. It runs an exploit to prove it exists, patches it with a local AI, then runs the same exploit again to prove the patch closed the hole. You see exactly what happened at every step.
 
 ```bash
 npm install -g opensec-intelligence
@@ -50,54 +47,58 @@ opensec scan ./
 
 ---
 
-## Why it beats everything else
+## The prove loop
 
-| | Claude Code | OpenSec Intelligence |
-|---|---|---|
-| Security scanning | ❌ Not built for it | ✅ Purpose-built, 4-agent pipeline |
-| Cost | $20/month | **Free forever** |
-| Local/private | ❌ Cloud only | ✅ 100% on your machine |
-| Fixes vulnerabilities | ❌ | ✅ Writes exact patches |
-| Proves exploits work | ❌ | ✅ Exploit + patch verification |
-| Multi-model consensus | ❌ | ✅ 3+ models validate each finding |
+This is what makes OpenSec different from every other free tool.
 
-| | Existing tools | OpenSec Intelligence |
-|---|---|---|
-| Models | Single model, trust blindly | 4-agent pipeline, consensus validated |
-| Scope | Code files only | Code + Docker + k8s + Terraform + secrets + OpenAPI |
-| Cost | $$$  per scan | **Free forever** with Ollama |
-| Privacy | Code sent to cloud | **Zero data leaves your machine** |
-| False positives | High | Filtered by 0.7+ confidence threshold |
-| Fixes | Suggestions only | **Writes the exact patch. Asks approval. Commits.** |
-| Exploit verification | None | **Generates exploit, runs it, verifies patch closes it** |
-| Cross-file reasoning | None | **Correlates findings across your entire system** |
+```bash
+opensec prove ./
+```
+
+```
+  ╭─────────────────────────────────────────────────────────────╮
+  │  PROVING: SQL Injection in src/db/queries.js:47             │
+  │                                                             │
+  │  🔴 VULNERABILITY CONFIRMED                                 │
+  │     Input:  "' OR '1'='1"                                  │
+  │     Result: returned 3 rows — authentication bypassed       │
+  │                                                             │
+  │  ─────────────────────────────────────────────────────────  │
+  │                                                             │
+  │  ✅ PATCH VERIFIED — exploit no longer works                │
+  │     Same input: "' OR '1'='1"                              │
+  │     Result:     parameterized query — 0 rows                │
+  ╰─────────────────────────────────────────────────────────────╯
+```
+
+**What's happening:**
+1. A local LLM writes a minimal exploit script for the finding
+2. The script runs in a sandboxed subprocess and confirms the vuln fires (`🔴`)
+3. The Fixer agent writes and applies the patch
+4. The same exploit runs again — it must fail (`✅`)
+5. Proof saved to `.opensec/proofs/` for audit
+
+No other free, local tool does this. Most enterprise tools don't either.
 
 ---
 
 ## Quickstart
 
 ```bash
-# 1. Install
+# Install
 npm install -g opensec-intelligence
 
-# 2. Pull a model (free, runs locally)
+# Pull a model (free, runs locally — one time)
 ollama pull qwen2.5-coder:14b
 
-# 3. Scan your repo
+# Scan your repo
 opensec scan ./
 
-# Quick sweep only
-opensec scan ./ --quick
-
-# Maximum accuracy (uses cloud for analyst + consensus)
-opensec scan ./ --cloud
-
-# Apply all validated fixes
-opensec fix
-
-# Generate HTML security report
-opensec report
+# See it on a deliberately vulnerable demo app
+opensec scan --demo
 ```
+
+**No account. No API key. Nothing leaves your machine.**
 
 ---
 
@@ -108,270 +109,181 @@ Your codebase
       │
       ▼
 ┌─────────────┐
-│   Scanner   │  Maps attack surface — every .py .js .ts .go .env
-│             │  Dockerfile *.yaml *.tf openapi.* *.pem *.key
+│   Scanner   │  Walks every file — code, Dockerfiles, k8s, .env,
+│             │  Terraform, CI/CD — in under 30 seconds.
+│             │  25+ deterministic rules. No LLM needed here.
 └──────┬──────┘
-       │ structured JSON
+       │ structured findings JSON
        ▼
 ┌─────────────┐
-│   Analyst   │  OWASP Top 10 · injection · auth bypass · secret leakage
-│             │  Cross-modal: weak auth + exposed port + public endpoint
-└──────┬──────┘  = one elevated CRITICAL finding
-       │ findings JSON
+│   Analyst   │  Sends each HIGH/CRITICAL finding to a local LLM
+│             │  with ±15 lines of file context.
+│             │  Filters anything below 0.7 confidence.
+└──────┬──────┘
+       │ confirmed findings
        ▼
 ┌─────────────┐
-│  Consensus  │  Re-examines every HIGH/CRITICAL independently
-│             │  Confidence score 0.0–1.0 · filters below 0.7
-└──────┬──────┘  Adds exploit scenario + CVSS estimate
+│  Consensus  │  Adversarial second pass on every CRITICAL.
+│             │  Tries to argue the finding ISN'T a vulnerability.
+│             │  If it still holds up — it's real.
+└──────┬──────┘
        │ validated findings
        ▼
 ┌─────────────┐
-│    Fixer    │  Writes exact patches · before/after diff
-│             │  Asks approval before each write · git commits
+│    Fixer    │  Writes the exact patch.
+│             │  Shows you a colored before/after diff.
+│             │  [A]pply / [S]kip / [Q]uit — you decide.
+│             │  Git commits on approval.
 └─────────────┘
 ```
 
-**The insight:** Single-model tools hallucinate. OpenSec's consensus layer means every HIGH finding was independently confirmed. If 3 models agree — you fix it. If only 1 does — it gets filtered.
-
----
-
-## The prove loop — what makes OpenSec different
-
-Other tools find vulnerabilities. OpenSec **proves they're real, then proves the patch works.**
-
-```
-🔍 Vulnerability Found
-🔴 Exploit Successfully Executed
-🔧 AI Generated Patch
-✅ Exploit Blocked After Patch
-   Verification Complete
-```
-
-```bash
-# Run the full prove loop on HIGH/CRITICAL findings from your last scan
-opensec prove ./
-
-# Show the generated exploit code
-opensec prove ./ --show-exploit
-
-# Dry run: generate + run exploit but skip patching
-opensec prove ./ --dry-run
-```
-
-**What happens under the hood:**
-
-1. **🔍 Vulnerability Found** — deterministic scanner + LLM consensus identifies and confirms the finding
-2. **🔴 Exploit Successfully Executed** — a local LLM writes a minimal runnable script that triggers the vulnerability; it runs in a sandboxed subprocess and prints `EXPLOITED:` if confirmed
-3. **🔧 AI Generated Patch** — the Fixer agent synthesizes the exact fix and applies it silently
-4. **✅ Exploit Blocked After Patch** — the same exploit re-runs against the patched code; it must NOT fire
-5. **Verification Complete** — proof saved to `.opensec/proofs/<id>.json` for audit
-
-**Safety:** Exploits run in an isolated subprocess with a minimal environment — real credentials and shell variables are never passed in. `eval()`/`Function()` string codegen is disabled inside the subprocess. Network access and filesystem writes outside `/tmp` are blocked before execution. Exploit files are deleted immediately after use.
-
-> ⚠️ **Do not run `opensec prove` on untrusted or adversarial code.** Scanned file content is embedded in the LLM prompt; a file containing crafted LLM directives could influence the generated exploit. The subprocess sandbox reduces but does not eliminate this risk — full isolation requires a container or VM.
-
-> Try it now: `opensec scan --demo` runs the full loop on a bundled vulnerable app.
-
----
-
-## See it in action
-
-### Scan output — real findings, real repo
-
-`opensec scan ./` runs a deterministic engine (25+ secret/code/infra rules) and prints structured findings in under a second:
-
-![OpenSec scan results](docs/screenshots/scan-results.svg)
-
-### The Fixer writes the patch — you approve it
-
-![Critical finding diff](docs/screenshots/diff-critical.svg)
-
-![High finding diff](docs/screenshots/diff-high.svg)
-
-> Run `opensec scan --demo` to see this on a bundled vulnerable app in seconds — no setup, no API keys.
-
-![Demo complete](docs/screenshots/demo-banner.svg)
-
-> Screenshots above are generated by `node scripts/generate-readme-assets.js` from the real scanner output.
-
----
-
-## The 4 agents
-
-| Agent | Job | Tools | Speed |
-|-------|-----|-------|-------|
-| **Scanner** | Maps the full attack surface across all file types | glob, grep, file_read, bash, think | Fast |
-| **Analyst** | Finds vulnerabilities + cross-modal correlation | file_read, grep, think | Thorough |
-| **Consensus** | Independently validates every HIGH/CRITICAL finding | think | Precise |
-| **Fixer** | Writes patches, diffs, asks approval, commits | file_read, file_edit, file_write, git_diff, git_commit | Careful |
-
----
-
-## Skills
-
-OpenSec ships with built-in security knowledge injected into every agent:
-
-| Skill | What it gives agents |
-|-------|---------------------|
-| `owasp-top10` | Full OWASP Top 10 reference — injection, broken auth, SSRF, and more |
-| `secret-patterns` | 200+ regex patterns for API keys, tokens, passwords, certificates |
-| `infra-checks` | Dockerfile, Kubernetes, Terraform security rules and misconfig patterns |
-| `cross-modal` | Rules for correlating findings across code + infra + config together |
+The insight that makes this work: **single-model tools hallucinate**. If one model says something is a vulnerability, it might be wrong. OpenSec's consensus layer requires independent confirmation — if models disagree, you don't get paged.
 
 ---
 
 ## What gets scanned
 
 | Category | File types |
-|----------|-----------|
+|---|---|
 | **Code** | `.py` `.js` `.ts` `.go` `.rb` `.java` `.php` `.rs` `.cpp` `.cs` |
 | **Infrastructure** | `Dockerfile` `docker-compose.yml` `*.tf` `*.hcl` `*.toml` |
-| **Kubernetes / Config** | `*.yaml` `*.yml` `openapi.*` `*.json` (API specs) |
+| **Kubernetes / Config** | `*.yaml` `*.yml` `openapi.*` `*.json` |
 | **Secrets** | `.env` `.env.*` `*.pem` `*.key` `*.p12` `*.pfx` |
 | **CI/CD** | `.github/workflows/*.yml` `.gitlab-ci.yml` `Jenkinsfile` |
 
----
-
-## Local vs Cloud
-
-| Mode | Cost | Privacy | When to use | Command |
-|------|------|---------|-------------|---------|
-| **Local** | Free | 100% private | Daily scans, CI, private repos | `opensec scan ./` |
-| **Quick** | Free | 100% private | Fast sweep, pre-commit | `opensec scan ./ --quick` |
-| **Cloud** | API cost | Analyst + Consensus only sent | Critical audits, max accuracy | `opensec scan ./ --cloud` |
-
-Cloud mode keeps Scanner and Fixer fully local. Only Analyst and Consensus touch the cloud.
+What gets detected: AWS/GitHub/Stripe keys, hardcoded passwords, SQL injection, command injection, path traversal, CORS wildcards, weak crypto (MD5/SHA1), eval usage, Docker root users, k8s privileged containers, Terraform open security groups, and more.
 
 ---
 
-## MCP Integration
-
-OpenSec exposes an MCP server for IDE and tool integration:
+## Commands
 
 ```bash
-# Start MCP server
-opensec serve --port 4141
+# Scan
+opensec scan ./              # Full 4-agent scan
+opensec scan ./ --quick      # Deterministic scanner only (no LLM, instant)
+opensec scan ./ --ci         # JSON output, exit 1 on CRITICAL — use in CI/CD
+opensec scan --demo          # Run on bundled vulnerable app — see the pipeline live
 
-# Connect from any MCP client
-# http://localhost:4141/v1/stream
+# Prove + fix
+opensec prove ./             # Generate exploit → confirm → patch → re-confirm
+opensec prove ./ --dry-run   # Generate and run exploit, skip patching
+opensec prove ./ --show-exploit  # Print the LLM-generated exploit code
+opensec fix                  # Apply patches from last scan interactively
+
+# Report + serve
+opensec report               # HTML security report
+opensec serve --port 4141    # Start HTTP + MCP server
+
+# Model
+opensec -m llama3.2:3b       # Override Ollama model
 ```
-
-Available MCP tools:
-
-| Tool | What it does |
-|------|-------------|
-| `scan_repo` | Trigger a full or quick scan on any path |
-| `get_findings` | Retrieve last scan results as structured JSON |
-| `apply_fix` | Apply a specific validated fix |
-| `get_report` | Generate HTML report of findings |
-| `get_status` | Ollama connection, model, mode status |
 
 ---
 
-## Highlights
+## CI/CD integration
 
-| | Feature | |
-|---|---|---|
-| 🔒 | **Local-first** | All inference on your hardware via Ollama — zero cloud dependency |
-| 🤖 | **4-agent pipeline** | Scanner → Analyst → Consensus → Fixer, fully sequential |
-| 🧠 | **Cross-modal analysis** | Code + Docker + k8s + Terraform + secrets analyzed together |
-| ✅ | **Consensus scoring** | Every finding validated by multiple models, 0.7+ threshold |
-| 🛠 | **20 built-in tools** | Files, grep, glob, bash, git, think, web fetch, RAG, MCP |
-| 🔌 | **MCP server** | Exposes scan/fix/report as MCP tools for IDE integration |
-| 💾 | **Session persistence** | Resume scans, checkpoints, branches |
-| ↩️ | **Undo** | Revert any fix the agent applied |
-| 🌐 | **HTTP API** | `opensec serve` exposes REST + SSE endpoints |
-| 🎯 | **Effort levels** | `--effort low\|medium\|high\|max` controls scan depth |
-| 🔍 | **RAG indexing** | Index your codebase for faster repeated scans |
-| 👁️ | **Daemon mode** | Watch files and auto-scan on change |
-| 🧩 | **VS Code ready** | Works with VS Code via MCP integration |
-| 🖼️ | **Vision** | Attach architecture diagrams for visual security review |
-| 🌿 | **Branching** | Fork scan sessions, compare findings across branches |
-| 📊 | **Token tracking** | `/cost` for per-scan usage breakdown |
+```bash
+# .github/workflows/security.yml
+opensec scan ./ --ci --output json
+# exits 1 if any CRITICAL findings — blocks the merge
+```
+
+See [`.github/workflows/opensec.yml`](.github/workflows/opensec.yml) for a full example.
+
+---
+
+## MCP integration
+
+OpenSec exposes an MCP server so any MCP-compatible tool (Claude Code, goose, Cursor) can call it:
+
+```bash
+opensec serve --port 4141
+# connect any MCP client to http://localhost:4141/v1/stream
+```
+
+| Tool | What it does |
+|---|---|
+| `scan_repo` | Trigger a full or quick scan |
+| `get_findings` | Structured JSON of last scan results |
+| `apply_fix` | Apply a specific validated fix |
+| `prove_finding` | Run the prove loop on a specific finding |
+| `get_report` | Generate HTML report |
 
 ---
 
 ## Model recommendations
 
-| Model | Pull command | Best for |
-|-------|-------------|----------|
-| `qwen2.5-coder:14b` | `ollama pull qwen2.5-coder:14b` | Best overall security analysis |
-| `deepseek-r1:14b` | `ollama pull deepseek-r1:14b` | Consensus reasoning |
-| `llama3.2:3b` | `ollama pull llama3.2:3b` | Fast scanner, low RAM |
-| `codellama:13b` | `ollama pull codellama:13b` | Balanced speed + accuracy |
-
-**Minimum spec:** 8GB RAM for `llama3.2:3b`. 16GB for `qwen2.5-coder:14b`.
-
----
-
-## CLI reference
+| Model | RAM | Best for |
+|---|---|---|
+| `qwen2.5-coder:14b` | 16GB | Best overall — recommended |
+| `deepseek-r1:14b` | 16GB | Best for the consensus reasoning pass |
+| `codellama:13b` | 16GB | Balanced speed + accuracy |
+| `llama3.2:3b` | 8GB | Fast scanner on low RAM machines |
 
 ```bash
-opensec scan [path]           # Full 4-agent scan (default: ./)
-opensec scan [path] --quick   # Scanner agent only
-opensec scan [path] --cloud   # Cloud models for analyst + consensus
-opensec fix                   # Apply fixes from last scan
-opensec report                # HTML report of findings
-opensec serve [--port 4141]   # Start HTTP + MCP server
-opensec -m <model>            # Set Ollama model
-opensec --effort <level>      # low | medium | high | max
-opensec daemon start          # Watch mode — scan on file change
+ollama pull qwen2.5-coder:14b   # recommended
+ollama pull llama3.2:3b          # minimum spec
 ```
 
 ---
 
-## Pro & Enterprise — Coming Soon
+## Local vs Cloud
 
-OpenSec Intelligence is free forever for local single-model scanning.
+| Mode | Cost | Privacy | Command |
+|---|---|---|---|
+| **Local** (default) | Free | 100% private | `opensec scan ./` |
+| **Quick** | Free | 100% private | `opensec scan ./ --quick` |
+| **Cloud** | API cost | Analyst + Consensus only | `opensec scan ./ --cloud` |
 
-Pro and Enterprise tiers are in development for teams and organizations
-that need maximum accuracy and zero false positives.
+Cloud mode keeps Scanner and Fixer fully local. Only the confirmation passes use cloud models.
 
-### 🔥 Pro  — Coming Soon
-- **Multi-model consensus** — 3 AI models scan simultaneously,
-  only findings 2+ models agree on get through
-- **Zero false positive guarantee** — confidence threshold 0.95+
-- **Cloud + local hybrid** — best of both worlds
-- **Priority scanning** — larger repos, faster results
-- **PDF security reports** — shareable compliance-ready reports
-- **Slack / Discord alerts** — findings posted to your team channel
+---
 
-### 🏢 Enterprise (Custom) — Coming Soon
-- **Air-gapped deployment** — fully offline, no internet required
-- **Custom model support** — bring your own fine-tuned security model
-- **CI/CD dashboard** — org-wide security posture in one view
-- **SARIF output** — integrates with GitHub Advanced Security
-- **SSO + team management** — role-based access control
-- **SLA + dedicated support** — 99.9% uptime guarantee
-- **Compliance reports** — SOC2, ISO 27001, OWASP ready
+## Safety
 
-### 🚀 Roadmap
-- [ ] Multi-model parallel scanning (--multi-model flag)
-- [ ] VS Code extension with inline vulnerability highlights
-- [ ] GitHub App — auto-scan every PR, post findings as comments
+The prove loop runs exploit code in a sandboxed subprocess:
+
+- Real credentials and environment variables are never passed to the subprocess
+- `eval()` and `new Function()` string codegen are disabled inside the subprocess
+- Network access is blocked before execution
+- Filesystem writes outside `/tmp` are blocked
+- Hard 10-second timeout
+- Exploit files are deleted immediately after use
+
+> ⚠️ Do not run `opensec prove` on untrusted code. File content is embedded in the LLM prompt — a crafted file could influence the generated exploit. Full isolation requires a container.
+
+---
+
+## What's coming
+
+- [ ] VS Code extension — inline vulnerability highlights as you type
+- [ ] GitHub App — auto-scan every PR, post findings as review comments
+- [ ] SARIF output — GitHub Advanced Security integration
+- [ ] Multi-model parallel scanning (`--multi-model`)
 - [ ] Web dashboard for team findings
-- [ ] Custom security rules engine
-- [ ] SARIF + GitHub Advanced Security integration
-- [ ] Slack / Discord bot
-- [ ] API access for custom integrations
+- [ ] Slack / Discord alerts
 
-### Join the Waitlist
-Pro and Enterprise are currently in private beta.
-
-**[Join the waitlist →](mailto:prabindersinghh@gmail.com)**
+**Pro + Enterprise tiers** are in development for teams that need zero-false-positive guarantees, air-gapped deployment, and compliance reports (SOC2, ISO 27001, OWASP). [Join the waitlist →](mailto:prabindersinghh@gmail.com)
 
 ---
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md). Security researchers, AI engineers, and open source contributors welcome.
+Security rules live in `src/security/patterns.ts` — adding a new detection pattern is a 5-line PR. See [CONTRIBUTING.md](CONTRIBUTING.md).
+
+```bash
+git clone https://github.com/prabindersinghh/opensec-intelligence
+npm install
+npm test          # 148 tests
+opensec scan ./   # dogfood
+```
 
 ---
 
 <div align="center">
 
-**OpenSec Intelligence** — open source under MIT License.
+MIT License · [npm](https://www.npmjs.com/package/opensec-intelligence) · [Issues](https://github.com/prabindersinghh/opensec-intelligence/issues)
 
-*By [Prabinder Singh](https://github.com/prabindersinghh)*
+Built by [Prabinder Singh](https://github.com/prabindersinghh) — B.Tech CS, Thapar Institute · Founder, [Leorit.ai](https://leorit.ai)
 
 </div>
